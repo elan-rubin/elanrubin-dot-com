@@ -45,25 +45,25 @@
     <section id="desktopSection" class="stage" data-scene>
       <div class="desktop-app-icons">
         <div class="app-icon desktop-icon" data-window="Calculator">
-          <div class="app-icon__tile glass">
+          <div class="app-icon__tile glass" data-tint="#8e8e93">
             <i class="fa-solid fa-calculator"></i>
           </div>
           <span>Calculator</span>
         </div>
         <div class="app-icon desktop-icon" data-window="Notepad">
-          <div class="app-icon__tile glass">
+          <div class="app-icon__tile glass" data-tint="#f5c542">
             <i class="fa-solid fa-note-sticky"></i>
           </div>
           <span>Notepad</span>
         </div>
         <div class="app-icon desktop-icon" data-window="Playlist">
-          <div class="app-icon__tile glass">
+          <div class="app-icon__tile glass" data-tint="#6c7ae0">
             <i class="fa-solid fa-music"></i>
           </div>
           <span>Playlist</span>
         </div>
         <div class="app-icon desktop-icon" data-window="Clicker">
-          <div class="app-icon__tile glass">
+          <div class="app-icon__tile glass" data-tint="#d2783c">
             <i class="fa-solid fa-cookie-bite"></i>
           </div>
           <span>Clicker</span>
@@ -74,13 +74,13 @@
           href="https://www.linkedin.com/in/elan-rubin/"
           class="app-icon"
           target="_blank"
-          ><div class="app-icon__tile glass">
+          ><div class="app-icon__tile glass" data-tint="#0a66c2">
             <i class="fa-brands fa-linkedin"></i>
           </div>
           <span>LinkedIn</span></a
         >
         <a href="https://github.com/Elan-Rubin" class="app-icon" target="_blank"
-          ><div class="app-icon__tile glass">
+          ><div class="app-icon__tile glass" data-tint="#1e1e1e">
             <i class="fa-brands fa-github"></i>
           </div>
           <span>GitHub</span></a
@@ -91,7 +91,7 @@
           aria-disabled="true"
           title="coming soon"
           ><i class="dnd" aria-hidden="true"></i>
-          <div class="app-icon__tile glass">
+          <div class="app-icon__tile glass" data-tint="#2f7fd6">
             <i class="fa-solid fa-envelope"></i>
           </div>
           <span>Email</span></a
@@ -100,7 +100,7 @@
           href="https://elanmakesgames.itch.io/"
           class="app-icon"
           target="_blank"
-          ><div class="app-icon__tile glass">
+          ><div class="app-icon__tile glass" data-tint="#fa5c5c">
             <i class="fa-brands fa-itch-io"></i>
           </div>
           <span>itch.io</span></a
@@ -110,7 +110,7 @@
           href="https://www.etsy.com/shop/Legoco"
           class="app-icon"
           target="_blank"
-          ><div class="app-icon__tile glass">
+          ><div class="app-icon__tile glass" data-tint="#f16521">
             <i class="fa-brands fa-etsy"></i>
           </div>
           <span>Etsy</span></a
@@ -119,7 +119,7 @@
           href="https://www.instagram.com/elan_rubin/"
           class="app-icon"
           target="_blank"
-          ><div class="app-icon__tile glass">
+          ><div class="app-icon__tile glass" data-tint="#c13584">
             <i class="fa-brands fa-instagram"></i>
           </div>
           <span>Instagram</span></a
@@ -128,13 +128,7 @@
       <div
         class="window glass terminal"
         data-pane="black"
-        style="
-          position: fixed;
-          top: 24.5rem;
-          left: 2rem;
-          width: 32rem;
-          z-index: 1000;
-        "
+        style="position: fixed; top: 24.5rem; left: 2rem; width: 32rem"
       >
         <div class="window-header">
           <div class="window-title">Terminal</div>
@@ -161,7 +155,6 @@
 
       <div
         class="window glass"
-        data-pane="white"
         style="top: calc(100vh - 25rem); left: calc(100vw - 46rem)"
       >
         <div class="window-header">
@@ -242,6 +235,7 @@
 
       <div
         class="window glass"
+        data-pane="green"
         style="
           top: calc(50vh - 15rem);
           left: calc(50vw - 20rem);

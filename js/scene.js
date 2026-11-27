@@ -1,5 +1,62 @@
 const MAX = 24;
-const MATERIALS = { glass: 0, black: 1, white: 2, green: 3 };
+const MATERIALS = { glass: 0, black: 1, green: 2 };
+const NODE_SPACING = 66;
+const NODE_K = 3;
+const DEV_K = 3;
+const NODE_R = 2.2;
+const GLOW_RANGE = 130;
+const TINT_L = 0.37;
+const TINT_MAX_C = 0.085;
+
+function toOklch([r, g, b]) {
+  const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const [lr, lg, lb] = [lin(r), lin(g), lin(b)];
+  const l = Math.cbrt(
+    0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb,
+  );
+  const m = Math.cbrt(
+    0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb,
+  );
+  const s = Math.cbrt(
+    0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb,
+  );
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    Math.hypot(a, bb),
+    Math.atan2(bb, a),
+  ];
+}
+
+function fromOklch(L, C, h) {
+  const a = C * Math.cos(h);
+  const b = C * Math.sin(h);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const enc = (c) =>
+    clamp(c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055, 0, 1);
+  return [
+    enc(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    enc(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    enc(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s),
+  ];
+}
+
+function normalizeTint(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const [, c, h] = toOklch([
+    (n >> 16) / 255,
+    ((n >> 8) & 255) / 255,
+    (n & 255) / 255,
+  ]);
+  const chroma = Math.min(c, TINT_MAX_C);
+  return {
+    rgb: fromOklch(TINT_L, chroma, h),
+    ink: `oklch(0.9 ${(chroma * 0.55).toFixed(3)} ${((h * 180) / Math.PI).toFixed(1)})`,
+  };
+}
 
 const VERT = `#version 300 es
 in vec2 aPos;
@@ -8,12 +65,14 @@ void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
 const FRAG = `#version 300 es
 precision highp float;
 uniform vec2 uRes;
+uniform vec2 uVP;
 uniform float uDpr;
 uniform float uTime;
-uniform vec2 uMouse;
 uniform int uCount;
 uniform vec4 uBox[${MAX}];
 uniform vec4 uProp[${MAX}];
+uniform vec4 uTint[${MAX}];
+uniform sampler2D uWeb;
 out vec4 outColor;
 
 const vec3 ACC = vec3(0.38, 0.92, 0.45);
@@ -22,28 +81,6 @@ float hash(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
   return fract(p.x * p.y);
-}
-
-float vnoise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(
-    mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-    f.y
-  );
-}
-
-float fbm(vec2 p) {
-  float s = 0.0;
-  float a = 0.5;
-  for (int i = 0; i < 4; i++) {
-    s += a * vnoise(p);
-    p = p * 2.03 + 17.1;
-    a *= 0.5;
-  }
-  return s;
 }
 
 float sdBox(vec2 p, vec2 h, float r) {
@@ -56,74 +93,133 @@ float smin(float a, float b, float k) {
   return min(a, b) - h * h * k * 0.25;
 }
 
-vec2 scene(vec2 p) {
+float scene(vec2 p) {
   float d = 1e4;
-  float mat = 0.0;
-  float best = 1e4;
   for (int i = 0; i < ${MAX}; i++) {
     if (i >= uCount) break;
     vec4 b = uBox[i];
     vec4 pr = uProp[i];
     float di = sdBox(p - b.xy, b.zw, pr.x) + (1.0 - pr.w) * 80.0;
-    if (di < best) { best = di; mat = pr.z; }
     d = (i == 0) ? di : smin(d, di, pr.y);
   }
-  return vec2(d, mat);
+  return d;
 }
 
-vec3 art(vec2 p, float m, float soft) {
-  vec2 q = p * uDpr / uRes.y;
-  float t = uTime * 0.025;
-  vec2 w = vec2(fbm(q * 1.7 + t), fbm(q * 1.7 - t + 9.0));
-  float n = fbm(q * 1.5 + w * 0.9 + vec2(t, -t * 0.6));
-  float mo = exp(-length(p - uMouse) / 170.0) * 0.22;
-  float f = (n * 1.6 + m * 0.9 + mo) * 13.0;
-  float w1 = abs(fract(f - 0.5) - 0.5) / max(fwidth(f), 1e-4);
-  float line = 1.0 - smoothstep(0.0, 1.1 + soft * 7.0, w1);
-  float major = step(abs(mod(floor(f + 0.5), 5.0)), 0.5);
-  float inten = mix(0.2, 0.55, major) * mix(1.0, 0.45, soft);
-  vec3 bg = vec3(0.035, 0.045, 0.038)
-    + vec3(0.0, 0.035, 0.012) * exp(-length(q - vec2(0.3, 0.35)) * 1.2);
-  return bg + ACC * line * inten;
+vec3 mats(vec2 p, out vec3 tintCol, out float tintAmt) {
+  float ws = 0.0;
+  float black = 0.0;
+  float green = 0.0;
+  float tile = 0.0;
+  vec3 tintSum = vec3(0.0);
+  float tintW = 0.0;
+  for (int i = 0; i < ${MAX}; i++) {
+    if (i >= uCount) break;
+    vec4 b = uBox[i];
+    vec4 pr = uProp[i];
+    float di = sdBox(p - b.xy, b.zw, pr.x) + (1.0 - pr.w) * 80.0;
+    float w = exp(-max(di, 0.0) / 22.0);
+    float isTile = step(9.5, pr.z);
+    float m = pr.z - isTile * 10.0;
+    ws += w;
+    black += w * step(0.5, m) * step(m, 1.5);
+    green += w * step(1.5, m);
+    tile += w * isTile;
+    tintSum += w * uTint[i].rgb * uTint[i].a;
+    tintW += w * uTint[i].a;
+  }
+  tintCol = tintSum / max(tintW, 1e-4);
+  tintAmt = tintW / max(ws, 1e-4);
+  return vec3(black, green, tile) / max(ws, 1e-4);
+}
+
+vec4 web(vec2 p, float soft) {
+  vec2 uv = p / uVP;
+  if (soft < 0.5) return texture(uWeb, uv);
+  vec2 o = vec2(5.0) / uVP;
+  return (texture(uWeb, uv + vec2(o.x, 0.0)) + texture(uWeb, uv - vec2(o.x, 0.0))
+    + texture(uWeb, uv + vec2(0.0, o.y)) + texture(uWeb, uv - vec2(0.0, o.y))) * 0.18;
+}
+
+vec3 base(vec2 p, float soft) {
+  vec2 n = p / uVP;
+  vec3 c = vec3(0.034, 0.039, 0.036);
+  c += ACC * 0.055 * exp(-length((n - vec2(0.2, 0.2)) * vec2(uVP.x / uVP.y, 1.0)) * 2.4);
+  c += ACC * 0.025 * exp(-length((n - vec2(0.85, 0.75)) * vec2(uVP.x / uVP.y, 1.0)) * 2.4);
+
+  vec2 g = mod(p, 18.0) - 9.0;
+  float dotp = 1.0 - smoothstep(0.7, 1.4, length(g));
+  float mask = smoothstep(1.0, 0.1, length((n - vec2(0.5, 0.4)) / vec2(0.85, 0.9)));
+  c += vec3(0.085) * dotp * mask * (1.0 - soft * 0.6);
+
+  float R = min(uVP.x * 0.23, 224.0);
+  vec2 rc = vec2(uVP.x * 1.08 - R, uVP.y * 0.08 + R);
+  rc += vec2(sin(uTime * 0.07), cos(uTime * 0.05)) * 14.0;
+  float r = length(p - rc);
+  float inside = 1.0 - smoothstep(R - 1.0, R, r);
+  float side = smoothstep(rc.x - 0.06 * R, rc.x, p.x);
+  float ring = 1.0 - smoothstep(0.0, 1.3, abs(mod(r, 7.0) - 3.5) - 2.2);
+  c += vec3(0.11) * ring * inside * side * (1.0 - soft * 0.5);
+  c += vec3(0.02) * inside * step(rc.x, p.x);
+
+  vec4 w = web(p, soft);
+  return c * (1.0 - w.a) + w.rgb;
 }
 
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uDpr;
-  vec2 sc = scene(p);
-  float D = sc.x;
-  float mat = sc.y;
-  float m = exp(-max(D, 0.0) / 240.0);
-  vec3 col = art(p, m, 0.0);
+  float D = scene(p);
+  vec3 tintCol;
+  float tintAmt;
+  vec3 mix3 = mats(p, tintCol, tintAmt);
+  float fBlack = mix3.x;
+  float fGreen = mix3.y;
+  float tile = mix3.z;
+  vec3 col = base(p, 0.0);
 
-  float shadow = smoothstep(48.0, -8.0, scene(p - vec2(0.0, 16.0)).x) * 0.5;
+  float shadow = smoothstep(44.0, -8.0, scene(p - vec2(0.0, 14.0))) * 0.55;
   col *= 1.0 - shadow * smoothstep(-2.0, 6.0, D);
+  float hard = step(scene(p - vec2(7.0, 7.0)), 0.0) * step(0.0, D);
+  col = mix(col, ACC * 0.22, hard * fGreen);
+
+  if (D > 0.0) {
+    col *= 1.0 - tile * (1.0 - smoothstep(0.0, 5.0, D)) * 0.75;
+    col = mix(col, ACC, tile * (1.0 - smoothstep(0.0, 1.3, abs(D - 5.5))) * 0.32);
+  }
 
   if (D < 1.0) {
-    vec2 g = vec2(dFdx(D), dFdy(D));
-    vec2 n = normalize(g + 1e-5);
+    vec2 n = normalize(vec2(dFdx(D), dFdy(D)) + 1e-5);
     float edge = clamp(-D / 20.0, 0.0, 1.0);
-    float lit = dot(n, normalize(vec2(-0.55, -0.85)));
+    float lit = max(dot(n, normalize(vec2(-0.55, -0.85))), 0.0);
     float rim = pow(1.0 - edge, 3.0);
-    float band = 1.0 - smoothstep(0.0, 1.6, abs(D + 1.2));
-    vec3 s;
-    if (mat < 0.5) {
-      vec2 p2 = p + n * (1.0 - edge) * (1.0 - edge) * 30.0;
-      vec3 b = art(p2, m, 1.0);
-      s = b * 0.5 + vec3(0.03, 0.045, 0.035) + ACC * 0.035;
-      s += vec3(0.05) * smoothstep(0.6, -0.8, n.y) * (1.0 - edge);
-      s += rim * (0.25 + 0.75 * max(lit, 0.0)) * 0.6;
-      s -= rim * max(-lit, 0.0) * 0.12;
-      s += band * 0.4 * (0.35 + 0.65 * max(lit, 0.0));
-    } else if (mat < 1.5) {
-      s = vec3(0.045, 0.05, 0.046) + vec3(0.03) * (1.0 - edge) * max(lit, 0.0);
-      s += band * 0.22 * (0.4 + 0.6 * max(lit, 0.0));
-    } else if (mat < 2.5) {
-      s = vec3(0.935, 0.955, 0.94) * (1.0 - 0.05 * rim);
-      s = mix(s, vec3(0.62), band * 0.55);
-    } else {
-      s = ACC * 0.95 * (1.0 - 0.1 * rim);
-      s = mix(s, vec3(0.1, 0.3, 0.14), band * 0.5);
-    }
+    float band = 1.0 - smoothstep(0.0, 1.4, abs(D + 1.0));
+    float inner = 1.0 - smoothstep(0.0, 0.9, abs(D + 6.0));
+    vec3 bandCol = mix(vec3(1.0), ACC, tile * 0.85);
+    vec2 gg = mod(p, 14.0) - 7.0;
+    float glyph = 1.0 - smoothstep(0.7, 1.3, length(gg));
+
+    vec2 p2 = p + n * (1.0 - edge) * (1.0 - edge) * 26.0;
+    vec3 glass = base(p2, 1.0) * 0.4 + vec3(0.016, 0.018, 0.017);
+    glass += vec3(0.028) * glyph * (0.4 + 0.6 * edge);
+    glass += rim * (0.15 + 0.85 * lit) * 0.16;
+
+    vec3 tinted = base(p2, 1.0) * 0.2 + tintCol * 0.95 + vec3(0.03) * glyph * (0.4 + 0.6 * edge);
+    tinted += rim * (0.15 + 0.85 * lit) * 0.14;
+    glass = mix(glass, tinted, tintAmt);
+
+    vec3 black = vec3(0.03, 0.033, 0.031) + vec3(0.022) * glyph * 0.6;
+    vec3 green = ACC * 0.84 * (1.0 - 0.08 * rim);
+    float zone = smoothstep(-1.0, -2.5, D) * smoothstep(-13.0, -11.0, D);
+    float hatch = smoothstep(0.38, 0.5, abs(fract((p.x - p.y) / 7.0) - 0.5));
+    green = mix(green, vec3(0.05, 0.17, 0.07), zone * hatch);
+    green = mix(green, ACC * 0.66, glyph * 0.8);
+    float frame = 1.0 - smoothstep(0.0, 1.0, abs(D + 14.0));
+    green = mix(green, vec3(0.04, 0.14, 0.06), frame * 0.85);
+
+    vec3 s = mix(mix(glass, black, fBlack), green, fGreen);
+    float lines = mix(0.34, 0.3, fBlack);
+    s += bandCol * band * (0.3 + 0.7 * lit) * lines * (1.0 - fGreen);
+    s += bandCol * inner * 0.06 * (1.0 - fGreen);
+    s = mix(s, vec3(0.08, 0.28, 0.12), band * 0.5 * fGreen);
     col = mix(col, s, smoothstep(0.8, -0.8, D));
   }
 
@@ -143,6 +239,60 @@ function compile(gl, type, source) {
     return null;
   }
   return shader;
+}
+
+function seeded(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) % 4294967296;
+    return s / 4294967296;
+  };
+}
+
+function scatter(width, height) {
+  const rand = seeded(1337);
+  const nodes = [];
+  const tries =
+    Math.round((width * height) / (NODE_SPACING * NODE_SPACING)) * 14;
+  for (let t = 0; t < tries; t++) {
+    const x = rand() * width;
+    const y = rand() * height;
+    if (nodes.every((n) => Math.hypot(n.hx - x, n.hy - y) >= NODE_SPACING)) {
+      nodes.push({
+        hx: x,
+        hy: y,
+        x,
+        y,
+        a: rand() * 6.28,
+        b: rand() * 6.28,
+        f: 0.15 + rand() * 0.25,
+        glow: 0,
+      });
+    }
+  }
+  const seen = new Set();
+  const edges = [];
+  nodes.forEach((n, i) => {
+    nodes
+      .map((m, j) => ({ j, d: Math.hypot(n.hx - m.hx, n.hy - m.hy) }))
+      .filter((o) => o.j !== i)
+      .sort((p, q) => p.d - q.d)
+      .slice(0, NODE_K)
+      .forEach(({ j }) => {
+        const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          edges.push([i, j]);
+        }
+      });
+  });
+  return { nodes, edges };
+}
+
+function outside(box, x, y) {
+  const dx = Math.max(Math.abs(x - box.cx) - box.hw, 0);
+  const dy = Math.max(Math.abs(y - box.cy) - box.hh, 0);
+  return { d: Math.hypot(dx, dy), dx, dy };
 }
 
 function start(root) {
@@ -177,22 +327,41 @@ function start(root) {
 
   const u = (name) => gl.getUniformLocation(program, name);
   const uRes = u("uRes");
+  const uVP = u("uVP");
   const uDpr = u("uDpr");
   const uTime = u("uTime");
-  const uMouse = u("uMouse");
   const uCount = u("uCount");
   const uBox = u("uBox");
   const uProp = u("uProp");
+  const uTint = u("uTint");
+  gl.uniform1i(u("uWeb"), 0);
+
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
+  const webCanvas = document.createElement("canvas");
+  const ctx = webCanvas.getContext("2d");
 
   root.prepend(canvas);
   document.documentElement.classList.add("gl");
 
   let dpr = 1;
+  let web = scatter(innerWidth, innerHeight);
+  let webScale = 1;
   const resize = () => {
     dpr = Math.min(devicePixelRatio || 1, 1.5);
     canvas.width = Math.round(innerWidth * dpr);
     canvas.height = Math.round(innerHeight * dpr);
+    webScale = Math.min(dpr, 1);
+    webCanvas.width = Math.round(innerWidth * webScale);
+    webCanvas.height = Math.round(innerHeight * webScale);
     gl.viewport(0, 0, canvas.width, canvas.height);
+    web = scatter(innerWidth, innerHeight);
   };
   resize();
   addEventListener("resize", resize);
@@ -212,6 +381,7 @@ function start(root) {
       el,
       isWindow: el.classList.contains("window"),
       mat: MATERIALS[(el.closest("[data-pane]") ?? el).dataset.pane] ?? 0,
+      tint: el.dataset.tint ? normalizeTint(el.dataset.tint) : null,
       x: 0,
       y: 0,
       vx: 0,
@@ -229,17 +399,124 @@ function start(root) {
     }),
   );
 
+  items.forEach((item) => {
+    if (item.tint) item.el.style.color = item.tint.ink;
+  });
+
   const boxes = new Float32Array(MAX * 4);
   const props = new Float32Array(MAX * 4);
+  const tints = new Float32Array(MAX * 4);
   const stiff = calm ? 900 : 260;
   const damp = calm ? 60 : 15;
   const sStiff = calm ? 900 : 300;
   const sDamp = calm ? 60 : 16;
+  const amp = calm ? 0 : 9;
+
+  const drawWeb = (now, live) => {
+    const t = now / 1000;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, webCanvas.width, webCanvas.height);
+    ctx.setTransform(webScale, 0, 0, webScale, 0, 0);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, innerWidth, innerHeight);
+    live.forEach((box) => {
+      ctx.roundRect(
+        box.cx - box.hw,
+        box.cy - box.hh,
+        box.hw * 2,
+        box.hh * 2,
+        12,
+      );
+    });
+    ctx.clip("evenodd");
+
+    web.nodes.forEach((n) => {
+      let tx = n.hx + Math.sin(t * n.f + n.a) * amp;
+      let ty = n.hy + Math.cos(t * n.f * 0.8 + n.b) * amp;
+      let near = 0;
+      live.forEach((box) => {
+        const o = outside(box, tx, ty);
+        if (o.d < 70) {
+          const push = (70 - o.d) * 0.55;
+          const len = o.d || 1;
+          tx += (o.dx / len) * Math.sign(tx - box.cx) * push;
+          ty += (o.dy / len) * Math.sign(ty - box.cy) * push;
+        }
+        near = Math.max(near, 1 - clamp(o.d / GLOW_RANGE, 0, 1));
+      });
+      const md = Math.hypot(tx - mouse.x, ty - mouse.y);
+      if (md < 120 && !calm) {
+        const push = ((120 - md) / 120) * 10;
+        tx += ((tx - mouse.x) / (md || 1)) * push;
+        ty += ((ty - mouse.y) / (md || 1)) * push;
+      }
+      near = Math.max(near, 1 - clamp(md / GLOW_RANGE, 0, 1));
+      n.x += (tx - n.x) * 0.12;
+      n.y += (ty - n.y) * 0.12;
+      n.glow += (near - n.glow) * 0.12;
+    });
+
+    ctx.lineCap = "round";
+    ctx.lineWidth = 1.3;
+    web.edges.forEach(([i, j]) => {
+      const a = web.nodes[i];
+      const b = web.nodes[j];
+      const g = Math.max(a.glow, b.glow);
+      ctx.strokeStyle = `rgba(120, 160, 128, ${0.1 + g * 0.45})`;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+    });
+
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "rgba(110, 200, 125, 0.34)";
+    live.forEach((box) => {
+      web.nodes
+        .map((n) => ({ n, d: Math.hypot(n.x - box.cx, n.y - box.cy) }))
+        .sort((p, q) => p.d - q.d)
+        .slice(0, DEV_K)
+        .forEach(({ n }) => {
+          ctx.beginPath();
+          ctx.moveTo(box.cx, box.cy);
+          ctx.lineTo(n.x, n.y);
+          ctx.stroke();
+        });
+    });
+
+    web.nodes.forEach((n) => {
+      ctx.fillStyle = `rgba(150, 170, 155, ${0.4 + n.glow * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, NODE_R + n.glow * 1.4, 0, 6.2832);
+      ctx.fill();
+      if (n.glow > 0.08) {
+        ctx.strokeStyle = `rgba(97, 235, 115, ${n.glow * 0.5})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, NODE_R + 3 + n.glow * 5, 0, 6.2832);
+        ctx.stroke();
+      }
+    });
+    ctx.restore();
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      webCanvas,
+    );
+  };
 
   let last = performance.now();
 
   const frame = (now) => {
-    const dt = Math.min((now - last) / 1000, 1 / 30);
+    const dt = clamp((now - last) / 1000, 0, 1 / 40);
     last = now;
     mouse.x += (mouse.tx - mouse.x) * Math.min(1, dt * 8);
     mouse.y += (mouse.ty - mouse.y) * Math.min(1, dt * 8);
@@ -248,10 +525,8 @@ function start(root) {
       item.visible = item.el.getClientRects().length > 0;
       if (!item.visible) return;
       const rect = item.el.getBoundingClientRect();
-      const w = rect.width / (item.sx * item.s) || rect.width;
-      const h = rect.height / (item.sy * item.s) || rect.height;
-      item.w = w;
-      item.h = h;
+      item.w = item.el.offsetWidth;
+      item.h = item.el.offsetHeight;
       item.cx = rect.left + rect.width / 2 - item.dx;
       item.cy = rect.top + rect.height / 2 - item.dy;
     });
@@ -283,34 +558,30 @@ function start(root) {
       ) {
         targetScale = item.el.closest(".app-icon--disabled") ? 1 : 1.14;
       }
-      const ax = stiff * (item.cx - item.x) - damp * item.vx;
-      const ay = stiff * (item.cy - item.y) - damp * item.vy;
-      item.vx += ax * dt;
-      item.vy += ay * dt;
+      item.vx += (stiff * (item.cx - item.x) - damp * item.vx) * dt;
+      item.vy += (stiff * (item.cy - item.y) - damp * item.vy) * dt;
       item.x += item.vx * dt;
       item.y += item.vy * dt;
-      const as = sStiff * (targetScale - item.s) - sDamp * item.vs;
-      item.vs += as * dt;
-      item.s += item.vs * dt;
-      const targetAlpha = closing ? 0 : 1;
-      item.alpha += (targetAlpha - item.alpha) * Math.min(1, dt * 10);
+      item.vs += (sStiff * (targetScale - item.s) - sDamp * item.vs) * dt;
+      item.s = clamp(item.s + item.vs * dt, 0.5, 1.4);
+      item.alpha += ((closing ? 0 : 1) - item.alpha) * Math.min(1, dt * 10);
 
-      const squash = calm
+      const sq = calm
         ? 0
         : clamp(
             Math.abs(item.vx) * 0.00022 - Math.abs(item.vy) * 0.00012,
             -0.08,
             0.08,
           );
-      const squashY = calm
+      const sqY = calm
         ? 0
         : clamp(
             Math.abs(item.vy) * 0.00022 - Math.abs(item.vx) * 0.00012,
             -0.08,
             0.08,
           );
-      item.sx = 1 + squash - squashY * 0.5;
-      item.sy = 1 + squashY - squash * 0.5;
+      item.sx = clamp(1 + sq - sqY * 0.5, 0.9, 1.1);
+      item.sy = clamp(1 + sqY - sq * 0.5, 0.9, 1.1);
       item.dx = item.x - item.cx;
       item.dy = item.y - item.cy;
 
@@ -330,8 +601,17 @@ function start(root) {
         hh: (item.h * sh) / 2,
       };
       const i = count++;
+      tints.set(item.tint ? [...item.tint.rgb, 1] : [0, 0, 0, 0], i * 4);
       boxes.set([item.box.cx, item.box.cy, item.box.hw, item.box.hh], i * 4);
-      props.set([14, item.isWindow ? 36 : 12, item.mat, item.alpha], i * 4);
+      props.set(
+        [
+          item.isWindow ? 12 : 16,
+          item.isWindow ? 36 : 12,
+          item.mat + (item.isWindow ? 0 : 10),
+          item.alpha,
+        ],
+        i * 4,
+      );
     });
 
     const windows = items
@@ -378,13 +658,19 @@ function start(root) {
         item.el.style.webkitMaskImage = "";
       });
 
+    drawWeb(
+      now,
+      items.filter((item) => item.box).map((item) => item.box),
+    );
+
     gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform2f(uVP, innerWidth, innerHeight);
     gl.uniform1f(uDpr, dpr);
     gl.uniform1f(uTime, now / 1000);
-    gl.uniform2f(uMouse, mouse.x, mouse.y);
     gl.uniform1i(uCount, count);
     gl.uniform4fv(uBox, boxes);
     gl.uniform4fv(uProp, props);
+    gl.uniform4fv(uTint, tints);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     requestAnimationFrame(frame);
   };
