@@ -30,6 +30,7 @@ body {
 }
 
 .app-icons {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem 1rem;
@@ -67,4 +68,9 @@ body {
   font-size: var(--text-sm);
   text-align: center;
   color: var(--text-muted);
+}
+
+.app-icon--disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }

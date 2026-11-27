@@ -3,55 +3,28 @@
 let zIndex = 1;
 
 function dragElement(elmnt) {
-  var pos1 = 0,
-    pos2 = 0,
-    pos3 = 0,
-    pos4 = 0;
-  elmnt
-    .querySelector(".window-header")
-    .addEventListener("mousedown", dragMouseDown);
-  elmnt
-    .querySelector(".window-header")
-    .addEventListener("touchstart", dragMouseDown);
+  const header = elmnt.querySelector(".window-header");
+  let grabX = 0;
+  let grabY = 0;
 
-  function dragMouseDown(e) {
+  header.style.touchAction = "none";
+
+  header.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".window-button")) return;
     e.preventDefault();
-    pos3 = e.clientX || e.touches[0].clientX;
-    pos4 = e.clientY || e.touches[0].clientY;
-    document.addEventListener("mouseup", closeDragElement);
-    document.addEventListener("touchend", closeDragElement);
-    document.addEventListener("mousemove", elementDrag);
-    document.addEventListener("touchmove", elementDrag);
-
+    grabX = e.clientX - elmnt.offsetLeft;
+    grabY = e.clientY - elmnt.offsetTop;
+    header.setPointerCapture(e.pointerId);
     elmnt.style.zIndex = ++zIndex;
-  }
+  });
 
-  function elementDrag(e) {
-    e.preventDefault();
-    pos1 = pos3 - (e.clientX || e.touches[0].clientX);
-    pos2 = pos4 - (e.clientY || e.touches[0].clientY);
-    pos3 = e.clientX || e.touches[0].clientX;
-    pos4 = e.clientY || e.touches[0].clientY;
-
-    var newTop = elmnt.offsetTop - pos2;
-    var newLeft = elmnt.offsetLeft - pos1;
-
-    var maxX = window.innerWidth - elmnt.offsetWidth;
-    var maxY = window.innerHeight - elmnt.offsetHeight;
-
-    newTop = Math.max(0, Math.min(newTop, maxY));
-    newLeft = Math.max(0, Math.min(newLeft, maxX));
-
-    elmnt.style.top = newTop + "px";
-    elmnt.style.left = newLeft + "px";
-  }
-
-  function closeDragElement() {
-    document.removeEventListener("mouseup", closeDragElement);
-    document.removeEventListener("touchend", closeDragElement);
-    document.removeEventListener("mousemove", elementDrag);
-    document.removeEventListener("touchmove", elementDrag);
-  }
+  header.addEventListener("pointermove", (e) => {
+    if (!header.hasPointerCapture(e.pointerId)) return;
+    const maxX = window.innerWidth - elmnt.offsetWidth;
+    const maxY = window.innerHeight - elmnt.offsetHeight;
+    elmnt.style.left = Math.max(0, Math.min(e.clientX - grabX, maxX)) + "px";
+    elmnt.style.top = Math.max(0, Math.min(e.clientY - grabY, maxY)) + "px";
+  });
 }
 
 // function setupWindowControls(window) {
@@ -98,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const notepadContent = document.getElementById("notepadContent");
   const notepadText =
-    "Hello!\nMy name is Elan Rubin, and I'm a computer science student.\nMy interests lie in the intersection between technology and art.";
+    "Hello!\nMy name is Elan, and I'm a student.\nMy interests lie in the intersection between technology and art.";
   animateTyping(notepadContent, notepadText, 25);
 });
 

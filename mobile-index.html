@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/tokens.css" />
@@ -20,15 +20,15 @@
     <link rel="stylesheet" href="/css/mobile.css" />
   </head>
 
-  <body class="stage">
+  <body class="stage" data-shapes>
     <!-- About Me window -->
     <div class="window glass">
       <div class="window-header">
         <span class="window-title">About Me</span>
       </div>
       <div class="window-content">
-        Hello! My name is Elan Rubin, and I'm a computer science student. My
-        interests lie in the intersection between technology and art.
+        Hello! My name is Elan, and I'm a student. My interests lie in the
+        intersection between technology and art.
       </div>
     </div>
 
@@ -51,7 +51,10 @@
         <span>GitHub</span></a
       >
 
-      <a class="app-icon"
+      <a
+        class="app-icon app-icon--disabled"
+        aria-disabled="true"
+        title="coming soon"
         ><div class="app-icon__tile glass">
           <i class="fa-solid fa-envelope"></i>
         </div>
@@ -91,7 +94,8 @@
       <script>
         document.write(new Date().getFullYear());
       </script>
-      Elan Rubin &nbsp;|&nbsp; All rights reserved
+      Elan &nbsp;|&nbsp; All rights reserved
     </div>
+    <script src="/js/shapes.js"></script>
   </body>
 </html>

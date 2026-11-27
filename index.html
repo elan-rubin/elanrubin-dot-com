@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..700&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" type="image/x-icon" href="/images/star_favicon.png" />
@@ -42,7 +42,7 @@
   </head>
 
   <body>
-    <section id="desktopSection" class="stage">
+    <section id="desktopSection" class="stage" data-shapes>
       <div class="desktop-app-icons">
         <div class="app-icon desktop-icon" data-window="Calculator">
           <div class="app-icon__tile glass">
@@ -86,7 +86,10 @@
           <span>GitHub</span></a
         >
         <div></div>
-        <a class="app-icon"
+        <a
+          class="app-icon app-icon--disabled"
+          aria-disabled="true"
+          title="coming soon"
           ><div class="app-icon__tile glass">
             <i class="fa-solid fa-envelope"></i>
           </div>
@@ -127,7 +130,7 @@
           position: fixed;
           top: 24.5rem;
           left: 2rem;
-          width: 19rem;
+          width: 32rem;
           z-index: 1000;
         "
       >
@@ -158,7 +161,7 @@
         class="window glass"
         style="
           top: calc(100vh - 20rem - 0.5rem + 1.5rem);
-          left: calc(100vw - 39.5rem);
+          left: calc(100vw - 46rem);
         "
       >
         <div class="window-header">
@@ -297,10 +300,7 @@
 
       <div
         class="window glass playlist-window"
-        style="
-          top: calc(100vh - 20rem - 0.5rem);
-          left: calc(100vw - 20rem - 3.5rem);
-        "
+        style="top: calc(100vh - 29rem); left: calc(100vw - 25.5rem)"
       >
         <div class="window-header">
           <div class="window-title">Playlist</div>
@@ -382,5 +382,6 @@
         <div style="background-color: red; padding: 2rem;">asd;ljkfjas;dlf</div>
     </section> -->
     <script src="/js/components.js"></script>
+    <script src="/js/shapes.js"></script>
   </body>
 </html>
