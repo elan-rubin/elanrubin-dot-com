@@ -60,14 +60,6 @@
   <body>
     <section id="desktopSection">
       <div class="desktop-app-icons">
-        <div class="app-icon desktop-icon" data-window="Slideshow">
-          <img
-            src="/images/ios4 Icons/Photos.png"
-            alt="Slideshow"
-            class="app-icon-img"
-          />
-          <span>Slideshow</span>
-        </div>
         <div class="app-icon desktop-icon" data-window="Calculator">
           <img
             src="/images/ios4 Icons/Calcualator.png"
@@ -145,30 +137,6 @@
           <span>GitHub</span>
         </a>
         <div></div>
-        <a href="#" class="app-icon resume-link">
-          <img
-            src="/images/ios4 Icons/Safari.png"
-            alt="Resume"
-            class="app-icon-img"
-          />
-          <span>Resume</span>
-        </a>
-        <a
-          class="app-icon"
-          onclick="
-            window.open(
-              'mailto:contact@example.invalid?subject=Hello%20Elan!&body=I%20love%20your%20website%20and%20am%20interested%20in%20hiring%20you.%0ASincerely%2C%0A%5BYour%20Name%5D',
-            );
-            return false;
-          "
-        >
-          <img
-            src="/images/ios4 Icons/Mail.png"
-            alt="Email"
-            class="app-icon-img"
-          />
-          <span>Email</span>
-        </a>
         <a
           href="https://elanmakesgames.itch.io/"
           class="app-icon"
@@ -249,52 +217,6 @@
         </div>
         <div class="window-content glass-dark-content terminal-content">
           <div class="terminal-commands" id="terminalCommands"></div>
-        </div>
-      </div>
-      <div class="window" style="top: 1rem; left: 1rem">
-        <div class="window-header">
-          <div class="window-title">Slideshow</div>
-          <div class="window-controls">
-            <button class="window-button close-btn">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-        </div>
-        <div class="window-content glass-content slideshow-content">
-          <div class="slider-wrapper">
-            <div class="slider">
-              <img
-                id="slide-1"
-                src="images/slideshow/slideshow_biggie_2.png"
-                draggable="false"
-                alt="Photo of Elan in front of Wendy's"
-              />
-              <img
-                id="slide-2"
-                src="images/slideshow/slideshow_centercity.png"
-                draggable="false"
-                alt="Photo of Elan and friends in Center City, PA"
-              />
-              <img
-                id="slide-3"
-                src="images/slideshow/slideshow_wyoming.png"
-                draggable="false"
-                alt="Photo of Elan and friends in Jackson Hole, WY"
-              />
-              <img
-                id="slide-4"
-                src="images/slideshow/slideshow_ny_2.png"
-                draggable="false"
-                alt="Photo of Elan in New York, NY"
-              />
-            </div>
-            <div class="slider-nav">
-              <a href="#slide-1"><i class="fa-solid fa-star"></i></a>
-              <a href="#slide-2"><i class="fa-solid fa-star"></i></a>
-              <a href="#slide-3"><i class="fa-solid fa-star"></i></a>
-              <a href="#slide-4"><i class="fa-solid fa-star"></i></a>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -499,57 +421,6 @@
       <script src="/js/musicplayer.js"></script>
       <!-- is this supposed to be here ^^ -->
       <!-- lol i guess cause it works -->
-
-      <div
-        class="window resume-window"
-        style="
-          top: 3rem;
-          left: calc(50vw - 25rem);
-          width: 50rem;
-          height: 40rem;
-          display: none;
-        "
-      >
-        <div class="window-header">
-          <div class="window-title">Resume</div>
-          <div class="window-controls">
-            <button class="window-button close-btn">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-        </div>
-        <div
-          class="window-content"
-          style="
-            padding: 0;
-            overflow: hidden;
-            height: calc(100% - 2rem);
-            display: flex;
-            flex-direction: column;
-          "
-        >
-          <object
-            id="resumeViewer"
-            type="application/pdf"
-            style="width: 100%; height: 100%; border: none; flex: 1"
-          >
-            <div style="padding: 2rem; text-align: center">
-              <p style="margin-bottom: 1rem">PDF viewer not available.</p>
-              <a
-                id="resumeDownloadLink"
-                href="#"
-                style="
-                  color: var(--color-light-green);
-                  text-decoration: underline;
-                "
-                download
-              >
-                Click here to download the resume
-              </a>
-            </div>
-          </object>
-        </div>
-      </div>
     </section>
     <div id="taskBar">
       <div id="taskBarItems">

@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const notepadContent = document.getElementById("notepadContent");
   const notepadText =
-    "Hello!\nMy name is Elan Rubin, and I'm a computer science student at university.\nMy interests lie in the intersection between technology and art.";
+    "Hello!\nMy name is Elan Rubin, and I'm a computer science student.\nMy interests lie in the intersection between technology and art.";
   animateTyping(notepadContent, notepadText, 25);
 });
 
@@ -126,63 +126,6 @@ function calculate() {
   }, 1000);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const slider = document.querySelector(".slider"); // Select the slider container
-  const slides = document.querySelectorAll(".slider img"); // Select all slides (images)
-  const slideCount = slides.length; // Number of slides
-  const interval = 2000; // Time for each slide transition in milliseconds (3 seconds)
-
-  let currentIndex = 0; // Index of the current slide
-  let startX = 0; // Starting x coordinate for touch
-  let endX = 0; // Ending x coordinate for touch
-
-  function goToSlide(index) {
-    const offset = slides[0].clientWidth * index; // Calculate the offset based on slide width
-    slider.style.transform = `translateX(-${offset}px)`; // Apply the translation to show the correct slide
-    currentIndex = index; // Update the current slide index
-  }
-
-  function nextSlide() {
-    currentIndex = (currentIndex + 1) % slideCount; // Move to the next slide, wrap around if needed
-    goToSlide(currentIndex); // Show the next slide
-  }
-
-  function previousSlide() {
-    currentIndex = (currentIndex - 1 + slideCount) % slideCount; // Move to the previous slide, wrap around if needed
-    goToSlide(currentIndex); // Show the previous slide
-  }
-
-  // Automatically transition to the next slide every few seconds
-  setInterval(nextSlide, interval);
-
-  // Optional: Add click event listeners for navigation dots
-  const navLinks = document.querySelectorAll(".slider-nav a"); // Select all navigation dots
-  navLinks.forEach((link, index) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault(); // Prevent the default anchor behavior
-      goToSlide(index); // Show the slide corresponding to the clicked dot
-    });
-  });
-
-  // Swipe handling
-  slider.addEventListener("touchstart", function (event) {
-    startX = event.touches[0].clientX; // Store the starting x coordinate
-  });
-
-  slider.addEventListener("touchend", function (event) {
-    endX = event.changedTouches[0].clientX; // Store the ending x coordinate
-    const diffX = endX - startX; // Calculate the difference
-    if (Math.abs(diffX) > 50) {
-      // If the swipe is significant
-      if (diffX > 0) {
-        previousSlide(); // Swipe right, go to the previous slide
-      } else {
-        nextSlide(); // Swipe left, go to the next slide
-      }
-    }
-  });
-});
-
 //app icon code
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -204,18 +147,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
-
-  // Handle resume link - open Resume window
-  const resumeLink = document.querySelector(".resume-link");
-  if (resumeLink) {
-    resumeLink.addEventListener("click", function (e) {
-      e.preventDefault();
-      // Toggle the Resume window (will load PDF on first open)
-      if (!windowStates["Resume"]) {
-        toggleWindow("Resume");
-      }
-    });
-  }
 });
 
 //update the time and volume
@@ -239,62 +170,11 @@ function updateTime() {
 
 // Store window states
 let windowStates = {
-  Slideshow: true,
   Calculator: true,
   Notepad: true,
   Playlist: true,
   Clicker: false,
-  Resume: false,
 };
-
-// Load the resume PDF into the object viewer
-async function loadResumePDF() {
-  const resumeViewer = document.getElementById("resumeViewer");
-  const downloadLink = document.getElementById("resumeDownloadLink");
-  if (!resumeViewer || resumeViewer.data) return; // Already loaded
-
-  try {
-    // Fetch the directory listing as HTML
-    const response = await fetch("pdf/resume/");
-    const html = await response.text();
-
-    // Parse HTML to find PDF files
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const links = doc.querySelectorAll("a");
-
-    // Find first PDF file
-    let pdfPath = null;
-    for (const link of links) {
-      const href = link.getAttribute("href");
-      if (href && href.toLowerCase().endsWith(".pdf")) {
-        pdfPath = href;
-        break;
-      }
-    }
-
-    if (pdfPath) {
-      // Decode the URL-encoded path and extract just the filename
-      const decodedPath = decodeURIComponent(pdfPath);
-      // Get the filename from the path (handles both / and \ separators)
-      const filename = decodedPath.split(/[/\\]/).pop();
-      const resumePath = `pdf/resume/${filename}`;
-
-      // Set the object data attribute to load the PDF
-      resumeViewer.data = resumePath;
-
-      // Set the download link href
-      if (downloadLink) {
-        downloadLink.href = resumePath;
-        downloadLink.download = filename;
-      }
-    } else {
-      console.error("No PDF found in resume folder");
-    }
-  } catch (error) {
-    console.error("Error loading resume:", error);
-  }
-}
 
 async function toggleWindow(windowName) {
   const windowElement = findWindowByTitle(windowName);
@@ -305,11 +185,6 @@ async function toggleWindow(windowName) {
       windowElement.style.animation = "openWindow 0.3s";
       windowElement.style.zIndex = ++zIndex; // Bring to front
       addTerminalCommand(`launch ${windowName.toLowerCase()}.exe`);
-
-      // Load PDF if this is the Resume window
-      if (windowName === "Resume") {
-        await loadResumePDF();
-      }
     } else {
       windowElement.style.animation = "closeWindow 0.3s";
       setTimeout(() => {
