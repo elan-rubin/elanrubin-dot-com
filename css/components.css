@@ -1596,3 +1596,72 @@
   border-radius: 1px;
   background: oklch(0.98 0 0);
 }
+
+.scene-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.gl .stage[data-scene] {
+  background: none;
+}
+
+.gl .stage[data-scene]::before,
+.gl .stage[data-scene]::after {
+  content: none;
+}
+
+.gl [data-scene] .window,
+.gl [data-scene] .app-icon__tile {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none !important;
+  transition: none;
+}
+
+.gl [data-scene] .window::before,
+.gl [data-scene] .app-icon__tile::before {
+  content: none;
+}
+
+.gl [data-scene] .window {
+  border-radius: 14px;
+}
+
+.gl [data-scene] .app-icon__tile {
+  border-radius: 14px;
+}
+
+.gl [data-scene] .app-icon:hover .app-icon__tile {
+  transform: none;
+}
+
+[data-pane="white"] {
+  --text: oklch(0.2 0.01 var(--hue));
+  --text-dim: oklch(0.38 0.01 var(--hue));
+  --text-muted: oklch(0.5 0.008 var(--hue));
+  --line: rgb(0 0 0 / 0.1);
+  --line-strong: rgb(0 0 0 / 0.3);
+  --accent: oklch(0.58 0.17 var(--hue));
+  --on-accent: oklch(0.98 0.01 var(--hue));
+  color: var(--text);
+  color-scheme: light;
+}
+
+[data-pane="green"] {
+  --text: oklch(0.15 0.03 var(--hue));
+  --text-dim: oklch(0.28 0.04 var(--hue));
+  --text-muted: oklch(0.38 0.05 var(--hue));
+  --line: rgb(0 0 0 / 0.14);
+  --line-strong: rgb(0 0 0 / 0.4);
+  --accent: oklch(0.15 0.03 var(--hue));
+  --on-accent: oklch(0.85 0.17 var(--hue));
+  color: var(--text);
+}

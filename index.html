@@ -42,7 +42,7 @@
   </head>
 
   <body>
-    <section id="desktopSection" class="stage">
+    <section id="desktopSection" class="stage" data-scene>
       <div class="desktop-app-icons">
         <div class="app-icon desktop-icon" data-window="Calculator">
           <div class="app-icon__tile glass">
@@ -127,6 +127,7 @@
       </div>
       <div
         class="window glass terminal"
+        data-pane="black"
         style="
           position: fixed;
           top: 24.5rem;
@@ -160,10 +161,8 @@
 
       <div
         class="window glass"
-        style="
-          top: calc(100vh - 20rem - 0.5rem + 1.5rem);
-          left: calc(100vw - 46rem);
-        "
+        data-pane="white"
+        style="top: calc(100vh - 25rem); left: calc(100vw - 46rem)"
       >
         <div class="window-header">
           <div class="window-title">Calculator</div>
@@ -383,5 +382,6 @@
         <div style="background-color: red; padding: 2rem;">asd;ljkfjas;dlf</div>
     </section> -->
     <script src="/js/components.js"></script>
+    <script type="module" src="/js/scene.js"></script>
   </body>
 </html>
