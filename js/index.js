@@ -37,8 +37,8 @@ function dragElement(elmnt) {
     if (moved) {
       emit("move", {
         name: elmnt.querySelector(".window-title").textContent.trim(),
-        x: Math.round(elmnt.offsetLeft),
-        y: Math.round(elmnt.offsetTop),
+        x: Math.round(parseFloat(elmnt.style.left) || elmnt.offsetLeft),
+        y: Math.round(parseFloat(elmnt.style.top) || elmnt.offsetTop),
       });
     }
   };
@@ -221,25 +221,6 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
 });
 
-//update the time and volume
-
-function updateTime() {
-  try {
-    const now = new Date();
-    let hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const ampm = hours >= 12 ? "PM" : "AM";
-
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-
-    const timeString = `${hours}:${minutes} ${ampm}`;
-    document.getElementById("timeDisplay").textContent = timeString;
-  } catch (error) {
-    console.error("issue with updating time", error);
-  }
-}
-
 // Store window states
 let windowStates = {
   Slideshow: true,
@@ -327,15 +308,10 @@ document.addEventListener("site:launch", (event) => {
 });
 
 document.addEventListener("click", (event) => {
-  const launcher = event.target.closest(".task-launch");
-  if (launcher) toggleWindow(launcher.dataset.launch);
   const icon = event.target.closest(".app-icon[data-launch]");
   if (icon) emit("launch", { name: icon.dataset.launch, action: "launch" });
 });
 
-setInterval(updateTime, 1000);
-
 document.addEventListener("DOMContentLoaded", function () {
-  updateTime();
   syncLaunchers();
 });

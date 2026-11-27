@@ -177,33 +177,6 @@ body {
   color: var(--on-accent);
 }
 
-#taskBar {
-  position: absolute;
-  bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.6rem 1rem;
-  border-top: var(--stroke) solid var(--line);
-  background: rgb(0 0 0 / 0.45);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
-}
-
-#taskBarItems,
-#taskBarItemsRight {
-  display: flex;
-  gap: 0.75rem;
-}
-
-#taskBarItemsRight {
-  color: var(--text-muted);
-}
-
 .music-player {
   overflow: hidden;
 }
@@ -526,14 +499,6 @@ body {
   }
 }
 
-#timeDisplay,
-.cookie-counter,
-.time-display,
-.playlist-item::before {
-  font-family: var(--font-dot);
-  font-weight: 800;
-}
-
 .calc-button:hover {
   animation: fontswap 0.5s steps(1) forwards;
 }
@@ -579,37 +544,6 @@ body {
   caret-color: var(--accent);
   caret-shape: block;
   user-select: text;
-}
-
-#taskBarLaunch {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.task-launch {
-  padding: 0 0.6rem;
-  border: var(--stroke) solid var(--line);
-  border-radius: 4px;
-  background: none;
-  font-family: var(--font-dot);
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    color var(--fast),
-    border-color var(--fast);
-}
-
-.task-launch:hover {
-  color: var(--text);
-  border-color: var(--line-strong);
-}
-
-.task-launch.is-open {
-  color: var(--accent);
-  border-color: color-mix(in oklch, var(--accent) 45%, transparent);
 }
 
 .app-dock {

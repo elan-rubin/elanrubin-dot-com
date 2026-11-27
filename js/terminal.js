@@ -418,23 +418,7 @@ function start() {
       );
       return;
     }
-    if (el.closest("#volumeIcon")) {
-      const audio = document.getElementById("audioPlayer");
-      const icon = document.getElementById("volumeIcon");
-      if (audio) audio.muted = !audio.muted;
-      icon.className = audio?.muted
-        ? "fa-solid fa-volume-xmark"
-        : "fa-solid fa-volume-high";
-      log("amixer set Master toggle", [
-        `Front Left: [${audio?.muted ? "off" : "on"}]`,
-      ]);
-      return;
-    }
-    if (el.closest(".fa-wifi")) {
-      log("nmcli radio wifi", ["enabled"]);
-      return;
-    }
-    if (el.closest("#desktopSection") && !el.closest(".window, #taskBar")) {
+    if (el.closest("#desktopSection") && !el.closest(".window")) {
       log(`xev -event button`, [
         `ButtonPress  root x=${Math.round(event.clientX)} y=${Math.round(event.clientY)}`,
       ]);

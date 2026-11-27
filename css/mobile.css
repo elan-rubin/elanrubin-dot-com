@@ -4,7 +4,7 @@ body {
   align-items: center;
   gap: 1.5rem;
   min-height: 100vh;
-  padding: 1.5rem 1rem 5rem;
+  padding: 1.5rem 1rem 2rem;
 }
 
 .window {
@@ -27,22 +27,6 @@ body {
 .window-content {
   padding: 1rem;
   color: var(--text-dim);
-}
-
-.taskbar {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  padding: 0.75rem;
-  border-top: var(--stroke) solid var(--line);
-  background: rgb(0 0 0 / 0.55);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  text-align: center;
-  color: var(--text-muted);
 }
 
 .window-title::before {

@@ -162,7 +162,7 @@ float vnoise(vec2 p) {
 }
 
 vec3 base(vec2 p, float soft) {
-  vec2 rough = vec2(sin(p.y * 0.021 + uTime * 0.5 + vnoise(p * 0.006) * 6.0), sin(p.x * 0.019 - uTime * 0.4 + vnoise(p * 0.006 + 4.0) * 6.0)) * 2.2;
+  vec2 rough = vec2(sin(p.y * 0.021 + uTime * 0.18 + vnoise(p * 0.006) * 6.0), sin(p.x * 0.019 - uTime * 0.14 + vnoise(p * 0.006 + 4.0) * 6.0)) * 1.5;
   vec2 pr = p + rough;
   vec2 n = p / uVP;
   vec3 c = vec3(0.034, 0.039, 0.036);
@@ -414,10 +414,10 @@ function start(root) {
   const boxes = new Float32Array(MAX * 4);
   const props = new Float32Array(MAX * 4);
   const tints = new Float32Array(MAX * 4);
-  const stiff = calm ? 900 : 260;
-  const damp = calm ? 60 : 15;
-  const sStiff = calm ? 900 : 300;
-  const sDamp = calm ? 60 : 16;
+  const stiff = calm ? 900 : 280;
+  const damp = calm ? 60 : 26;
+  const sStiff = calm ? 900 : 320;
+  const sDamp = calm ? 60 : 26;
   const amp = calm ? 0 : 16;
 
   const drawWeb = (now, live) => {
@@ -445,25 +445,23 @@ function start(root) {
       let ty = n.hy + Math.cos(t * n.f * 0.8 + n.b) * amp;
       let near = 0;
       live.forEach((box) => {
-        const o = outside(box, tx, ty);
-        if (o.d < 70) {
-          const push = (70 - o.d) * 0.55;
-          const len = o.d || 1;
-          tx += (o.dx / len) * Math.sign(tx - box.cx) * push;
-          ty += (o.dy / len) * Math.sign(ty - box.cy) * push;
+        const qx = Math.abs(tx - box.cx) - box.hw;
+        const qy = Math.abs(ty - box.cy) - box.hh;
+        const d =
+          Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) +
+          Math.min(Math.max(qx, qy), 0);
+        if (d < 70) {
+          const push = Math.min(70 - d, 90) * 0.5;
+          if (qx > qy) tx += Math.sign(tx - box.cx || 1) * push;
+          else ty += Math.sign(ty - box.cy || 1) * push;
         }
-        near = Math.max(near, 1 - clamp(o.d / GLOW_RANGE, 0, 1));
+        near = Math.max(near, 1 - clamp(d / GLOW_RANGE, 0, 1));
       });
       const md = Math.hypot(tx - mouse.x, ty - mouse.y);
-      if (md < 120 && !calm) {
-        const push = ((120 - md) / 120) * 10;
-        tx += ((tx - mouse.x) / (md || 1)) * push;
-        ty += ((ty - mouse.y) / (md || 1)) * push;
-      }
       near = Math.max(near, 1 - clamp(md / GLOW_RANGE, 0, 1));
-      n.x += (tx - n.x) * 0.12;
-      n.y += (ty - n.y) * 0.12;
-      n.glow += (near - n.glow) * 0.12;
+      n.x += (tx - n.x) * 0.1;
+      n.y += (ty - n.y) * 0.1;
+      n.glow += (near - n.glow) * 0.08;
     });
 
     ctx.lineCap = "round";
@@ -637,14 +635,20 @@ function start(root) {
         item.x = item.cx;
         item.y = item.cy;
         item.vx = item.vy = 0;
-        item.s = item.isWindow ? 0.84 : 1;
+        const booting = now < 1600;
+        item.s = item.isWindow && !booting ? 0.84 : 1;
         item.vs = 0;
-        item.alpha = item.isWindow ? 0 : 1;
+        item.alpha = item.isWindow && !booting ? 0 : 1;
       }
       let targetScale = 1;
       if (closing) targetScale = 0.84;
       else if (item.isTile && item.el.closest(".app-icon")?.matches(":hover")) {
         targetScale = 1.1;
+      }
+      if (item.el.dataset.dragging !== undefined) {
+        item.x = item.cx;
+        item.y = item.cy;
+        item.vx = item.vy = 0;
       }
       item.vx += (stiff * (item.cx - item.x) - damp * item.vx) * dt;
       item.vy += (stiff * (item.cy - item.y) - damp * item.vy) * dt;
@@ -654,28 +658,12 @@ function start(root) {
       item.s = clamp(item.s + item.vs * dt, 0.5, 1.4);
       item.alpha += ((closing ? 0 : 1) - item.alpha) * Math.min(1, dt * 10);
 
-      const sq = calm
-        ? 0
-        : clamp(
-            Math.abs(item.vx) * 0.00022 - Math.abs(item.vy) * 0.00012,
-            -0.08,
-            0.08,
-          );
-      const sqY = calm
-        ? 0
-        : clamp(
-            Math.abs(item.vy) * 0.00022 - Math.abs(item.vx) * 0.00012,
-            -0.08,
-            0.08,
-          );
-      item.sx = clamp(1 + sq - sqY * 0.5, 0.9, 1.1);
-      item.sy = clamp(1 + sqY - sq * 0.5, 0.9, 1.1);
       item.dx = item.x - item.cx;
       item.dy = item.y - item.cy;
 
-      const sw = item.sx * item.s;
-      const sh = item.sy * item.s;
-      item.el.style.transform = `translate(${item.dx}px, ${item.dy}px) scale(${sw}, ${sh})`;
+      const sw = item.s;
+      const sh = item.s;
+      item.el.style.transform = `translate(${item.dx}px, ${item.dy}px) scale(${item.s})`;
       if (item.isWindow) item.el.style.opacity = item.alpha.toFixed(3);
 
       if (item.alpha < 0.01 || count >= MAX) {
