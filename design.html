@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Design system</title>
+    <link rel="icon" type="image/x-icon" href="/images/star_favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <filter id="glass-refract" x="0" y="0" width="100%" height="100%">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.012 0.02"
+          numOctaves="2"
+          seed="4"
+          result="noise"
+        />
+        <feDisplacementMap
+          in="SourceGraphic"
+          in2="noise"
+          scale="38"
+          xChannelSelector="R"
+          yChannelSelector="G"
+        />
+      </filter>
+    </svg>
+
+    <div class="stage">
+      <div class="container">
+        <nav class="nav glass" style="margin-top: var(--s-4)">
+          <a class="nav__brand" href="#top">elan</a>
+          <ul class="nav__links">
+            <li><a href="#foundations" aria-current="page">Foundations</a></li>
+            <li><a href="#actions">Actions</a></li>
+            <li><a href="#forms">Forms</a></li>
+            <li><a href="#display">Display</a></li>
+            <li><a href="#feedback">Feedback</a></li>
+            <li><a href="#desktop">Desktop</a></li>
+          </ul>
+          <button class="btn btn--primary btn--sm" data-toast="saved">
+            Toast
+          </button>
+        </nav>
+
+        <header class="hero" id="top">
+          <span class="label label--accent">
+            <span class="led led--on led--blink"></span> Component library 0.2
+          </span>
+          <h1 class="display display-xl">Black glass,<br />green signal.</h1>
+          <p class="lead">
+            A dark, modular, dot-matrix system with liquid glass surfaces. Every
+            piece the site needs lives here first.
+          </p>
+          <div class="row">
+            <button class="btn btn--primary btn--lg">Primary</button>
+            <button class="btn btn--glass btn--lg">Glass</button>
+            <button class="btn btn--lg">Outline</button>
+          </div>
+        </header>
+      </div>
+    </div>
+
+    <main class="container">
+      <section class="section stack" id="foundations" style="--gap: var(--s-6)">
+        <div>
+          <span class="label label--accent">01</span>
+          <h2 class="h1">Foundations</h2>
+        </div>
+
+        <div class="stack">
+          <h3 class="label">Color</h3>
+          <div class="grid" style="--cols: 4">
+            <div class="card" style="background: var(--accent)">
+              <span class="label" style="color: var(--on-accent)">accent</span>
+            </div>
+            <div class="card" style="background: var(--bg)">
+              <span class="label">bg</span>
+            </div>
+            <div class="card" style="background: var(--bg-raised)">
+              <span class="label">raised</span>
+            </div>
+            <div class="card" style="background: var(--surface-2)">
+              <span class="label">surface</span>
+            </div>
+            <div class="card" style="background: var(--danger)">
+              <span class="label" style="color: #000">danger</span>
+            </div>
+            <div class="card" style="background: var(--warn)">
+              <span class="label" style="color: #000">warn</span>
+            </div>
+            <div class="card" style="background: var(--info)">
+              <span class="label" style="color: #000">info</span>
+            </div>
+            <div class="card" style="background: var(--text)">
+              <span class="label" style="color: #000">text</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <h3 class="label">Type</h3>
+          <div class="display display-xl">Aa 0123</div>
+          <div class="display display-lg">Dot matrix display</div>
+          <div class="h1">Space Grotesk heading one</div>
+          <div class="h2">Heading two</div>
+          <div class="h3">Heading three</div>
+          <p class="lead">Lead paragraph for introductions.</p>
+          <p class="body">
+            Body copy sits quietly in a dimmed white so headings and accents do
+            the talking. <a class="link" href="#foundations">A link</a>, a
+            <span class="kbd">Cmd</span> <span class="kbd">K</span> shortcut and
+            <span class="mono text-accent">mono text</span>.
+          </p>
+          <span class="label">Mono label / uppercase / tracked</span>
+        </div>
+
+        <div class="stack">
+          <h3 class="label">Glass, over a busy stage</h3>
+          <div
+            class="stage"
+            style="padding: var(--s-7); border-radius: var(--radius-lg)"
+          >
+            <div class="grid" style="--cols: 3; position: relative">
+              <div class="glass card">
+                <span class="label">glass</span>
+                <p class="body">
+                  Blur, saturation, an inner highlight and a light that follows
+                  the pointer.
+                </p>
+              </div>
+              <div class="glass glass--tint card">
+                <span class="label label--accent">glass tint</span>
+                <p class="body">Same surface with an accent wash.</p>
+              </div>
+              <div class="glass glass--refract card">
+                <span class="label">glass refract</span>
+                <p class="body">Bends what is behind it. Chromium only.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <h3 class="label">Modules and dividers</h3>
+          <div class="modules">
+            <div class="span-2 row-2">
+              <span class="label">module</span>
+              <span class="display display-lg">01</span>
+            </div>
+            <div class="span-2">
+              <span class="label">module</span>
+              <span class="led led--on"></span>
+            </div>
+            <div class="span-2 dot-grid">
+              <span class="label">dot grid</span>
+            </div>
+            <div class="span-4">
+              <span class="label">wide module</span>
+              <span class="muted">Modules butt together on hairlines.</span>
+            </div>
+          </div>
+          <hr class="rule" />
+          <hr class="rule rule--dots" />
+        </div>
+      </section>
+
+      <section class="section stack" id="actions" style="--gap: var(--s-6)">
+        <div>
+          <span class="label label--accent">02</span>
+          <h2 class="h1">Actions and navigation</h2>
+        </div>
+
+        <div class="row">
+          <button class="btn btn--primary">Primary</button>
+          <button class="btn btn--glass">Glass</button>
+          <button class="btn">Outline</button>
+          <button class="btn btn--ghost">Ghost</button>
+          <button class="btn btn--danger">Danger</button>
+          <button class="btn" disabled>Disabled</button>
+          <button class="btn btn--sm">Small</button>
+          <button class="btn btn--icon tooltip" data-tip="icon button">
+            +
+          </button>
+        </div>
+
+        <div class="row">
+          <div class="segmented">
+            <label
+              ><input type="radio" name="view" checked /><span
+                >Grid</span
+              ></label
+            >
+            <label><input type="radio" name="view" /><span>List</span></label>
+            <label><input type="radio" name="view" /><span>Map</span></label>
+          </div>
+          <button class="btn btn--glass" data-open="demo-dialog">
+            Open dialog
+          </button>
+        </div>
+
+        <div class="stack">
+          <div class="tabs" role="tablist">
+            <button
+              role="tab"
+              aria-selected="true"
+              aria-controls="tab-a"
+              id="t-a"
+            >
+              About
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-b"
+              id="t-b"
+            >
+              Work
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-c"
+              id="t-c"
+            >
+              Contact
+            </button>
+          </div>
+          <div class="tabpanel" id="tab-a" role="tabpanel">
+            <p class="body">First panel.</p>
+          </div>
+          <div class="tabpanel" id="tab-b" role="tabpanel" hidden>
+            <p class="body">Second panel.</p>
+          </div>
+          <div class="tabpanel" id="tab-c" role="tabpanel" hidden>
+            <p class="body">Third panel.</p>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content: space-between">
+          <ol class="crumbs">
+            <li><a href="#top">Home</a></li>
+            <li><a href="#actions">Work</a></li>
+            <li>Project</li>
+          </ol>
+          <ul class="pager">
+            <li><a href="#actions">&lt;</a></li>
+            <li><a href="#actions" aria-current="page">1</a></li>
+            <li><a href="#actions">2</a></li>
+            <li><a href="#actions">3</a></li>
+            <li><a href="#actions">&gt;</a></li>
+          </ul>
+        </div>
+
+        <div
+          class="stage"
+          style="padding: var(--s-6); border-radius: var(--radius-lg)"
+        >
+          <ul class="menu glass" style="position: relative">
+            <li>
+              <a href="#actions">Profile <span class="kbd">P</span></a>
+            </li>
+            <li>
+              <a href="#actions">Settings <span class="kbd">S</span></a>
+            </li>
+            <li><button type="button">Sign out</button></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section stack" id="forms" style="--gap: var(--s-6)">
+        <div>
+          <span class="label label--accent">03</span>
+          <h2 class="h1">Forms</h2>
+        </div>
+
+        <div class="grid" style="--cols: 2; --gap: var(--s-6)">
+          <div class="stack">
+            <label class="field">
+              <span class="label">Name</span>
+              <input class="input" placeholder="Your name" />
+              <span class="field__hint">As it should appear.</span>
+            </label>
+            <label class="field field--error">
+              <span class="label">Email</span>
+              <input class="input" value="not-an-email" />
+              <span class="field__hint">That does not look like an email.</span>
+            </label>
+            <label class="field">
+              <span class="label">Topic</span>
+              <select class="select">
+                <option>Hello</option>
+                <option>Work</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="label">Message</span>
+              <textarea class="textarea" placeholder="Say something"></textarea>
+            </label>
+          </div>
+          <div class="stack">
+            <div class="input-group">
+              <span class="muted">/</span>
+              <input placeholder="Search" />
+              <span class="kbd">K</span>
+            </div>
+            <label class="check"
+              ><input type="checkbox" checked /> Checkbox</label
+            >
+            <label class="check"
+              ><input type="radio" name="r" checked /> Radio one</label
+            >
+            <label class="check"
+              ><input type="radio" name="r" /> Radio two</label
+            >
+            <label class="row">
+              <span class="switch"
+                ><input type="checkbox" checked /><span></span
+              ></span>
+              Switch
+            </label>
+            <label class="field">
+              <span class="label">Slider</span>
+              <input type="range" class="range" min="0" max="100" value="60" />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="section stack" id="display" style="--gap: var(--s-6)">
+        <div>
+          <span class="label label--accent">04</span>
+          <h2 class="h1">Display</h2>
+        </div>
+
+        <div class="grid">
+          <article class="card card--hover">
+            <div class="card__media"></div>
+            <span class="badge badge--accent">Featured</span>
+            <h3 class="h3">Media card</h3>
+            <p class="body">Cover, tag, title, text.</p>
+          </article>
+          <article class="card glass">
+            <span class="label">glass card</span>
+            <h3 class="h3">Floats over anything</h3>
+            <p class="body">Use on top of imagery and the stage.</p>
+            <div class="row">
+              <span class="tag">Tag</span><span class="pill">Pill</span>
+            </div>
+          </article>
+          <article class="card">
+            <div class="stat">
+              <span class="label">Stat</span>
+              <span class="stat__value">128</span>
+              <span class="muted">things built</span>
+            </div>
+            <div class="progress progress--dots" style="--value: 70%">
+              <i></i>
+            </div>
+          </article>
+        </div>
+
+        <div class="row">
+          <span class="badge">Default</span>
+          <span class="badge badge--accent">Accent</span>
+          <span class="badge badge--warn">Warn</span>
+          <span class="badge badge--danger">Danger</span>
+          <span class="row"><span class="led led--on"></span> online</span>
+          <span class="row"><span class="led"></span> idle</span>
+          <span class="avatar">E</span>
+          <span class="avatar avatar--ring">E</span>
+        </div>
+
+        <div class="grid" style="--cols: 2; --gap: var(--s-6)">
+          <div class="stack">
+            <ul class="list">
+              <li><span>List item</span><span class="muted">01</span></li>
+              <li><span>Another item</span><span class="muted">02</span></li>
+              <li><span>And one more</span><span class="muted">03</span></li>
+            </ul>
+            <details class="accordion" open>
+              <summary>Accordion open</summary>
+              <div>Hidden content slides into view.</div>
+            </details>
+            <details class="accordion">
+              <summary>Accordion closed</summary>
+              <div>More content.</div>
+            </details>
+          </div>
+          <div class="stack">
+            <ul class="timeline">
+              <li>
+                <span class="label label--accent">Now</span>
+                <p class="body">Latest entry.</p>
+              </li>
+              <li>
+                <span class="label">Before</span>
+                <p class="body">An earlier entry.</p>
+              </li>
+              <li>
+                <span class="label">Earlier</span>
+                <p class="body">The first entry.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Year</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Project one</td>
+              <td><span class="badge badge--accent">Live</span></td>
+              <td>2026</td>
+            </tr>
+            <tr>
+              <td>Project two</td>
+              <td><span class="badge">Shelved</span></td>
+              <td>2025</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <blockquote class="quote">
+          Something worth pulling out of the page.
+          <cite>Source</cite>
+        </blockquote>
+
+        <pre class="code"><b>const</b> signal = <b>"green"</b>;
+console.log(signal);</pre>
+
+        <div class="gallery">
+          <div class="frame" data-label="frame 01"></div>
+          <div class="frame" data-label="frame 02"></div>
+          <div class="frame" data-label="frame 03"></div>
+        </div>
+
+        <div class="carousel">
+          <div class="frame" data-label="slide 1"></div>
+          <div class="frame" data-label="slide 2"></div>
+          <div class="frame" data-label="slide 3"></div>
+          <div class="frame" data-label="slide 4"></div>
+        </div>
+      </section>
+
+      <section class="section stack" id="feedback" style="--gap: var(--s-6)">
+        <div>
+          <span class="label label--accent">05</span>
+          <h2 class="h1">Feedback</h2>
+        </div>
+
+        <div class="stack">
+          <div class="alert">Saved. Everything went through.</div>
+          <div class="alert alert--info">Heads up, something to know.</div>
+          <div class="alert alert--warn">Careful, this is risky.</div>
+          <div class="alert alert--danger">Something broke.</div>
+        </div>
+
+        <div class="row" style="--gap: var(--s-6)">
+          <div class="loader"><i></i><i></i><i></i></div>
+          <div class="progress" style="--value: 40%; width: 12rem"><i></i></div>
+          <div class="stack" style="width: 12rem; --gap: var(--s-2)">
+            <div class="skeleton"></div>
+            <div class="skeleton" style="width: 70%"></div>
+          </div>
+        </div>
+
+        <div class="empty">
+          <span class="display display-lg">:)</span>
+          <span class="muted">Nothing here yet.</span>
+          <button class="btn btn--sm">Add something</button>
+        </div>
+      </section>
+
+      <section class="section stack" id="desktop" style="--gap: var(--s-6)">
+        <div>
+          <span class="label label--accent">06</span>
+          <h2 class="h1">Desktop pieces</h2>
+          <p class="body">
+            The current site's windows, icons, terminal and player, restyled.
+          </p>
+        </div>
+
+        <div
+          class="stage"
+          style="
+            padding: var(--s-7) var(--s-5);
+            border-radius: var(--radius-lg);
+          "
+        >
+          <div
+            class="grid"
+            style="--cols: 3; position: relative; align-items: start"
+          >
+            <div class="window glass">
+              <div class="window__bar">
+                <span>Notepad</span>
+                <button class="window__close" aria-label="close">x</button>
+              </div>
+              <div class="window__body body">
+                Hello, windows are glass panes with a hairline title bar.
+              </div>
+            </div>
+            <div class="window glass glass--solid">
+              <div class="window__bar"><span>Terminal</span></div>
+              <div class="terminal">
+                <p>launch notepad.exe</p>
+                <p class="cursor">visit github</p>
+              </div>
+            </div>
+            <div class="stack" style="--gap: var(--s-4)">
+              <div class="row" style="--gap: var(--s-4)">
+                <div class="app-icon">
+                  <div class="app-icon__tile glass">#</div>
+                  Notes
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon__tile glass glass--tint">+</div>
+                  Calc
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon__tile glass">~</div>
+                  Music
+                </div>
+              </div>
+              <div class="player glass">
+                <div class="player__track">
+                  <div class="player__eq">
+                    <i></i><i></i><i></i><i></i><i></i>
+                  </div>
+                  <div>
+                    <div>Track name</div>
+                    <div class="muted mono" style="font-size: var(--text-xs)">
+                      Artist
+                    </div>
+                  </div>
+                </div>
+                <div class="progress" style="--value: 35%"><i></i></div>
+                <div class="row" style="justify-content: center">
+                  <button class="btn btn--ghost btn--icon">&lt;</button>
+                  <button class="btn btn--primary btn--icon">&gt;</button>
+                  <button class="btn btn--ghost btn--icon">&gt;&gt;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container row" style="justify-content: space-between">
+        <span>Design system 0.2</span>
+        <span class="mono">black glass / green signal</span>
+      </div>
+    </footer>
+
+    <dialog class="dialog glass glass--solid" id="demo-dialog">
+      <div class="stack">
+        <span class="label label--accent">dialog</span>
+        <h2 class="h2">Glass dialog</h2>
+        <p class="body">Backdrop blurs the page behind it.</p>
+        <div class="row" style="justify-content: flex-end">
+          <button class="btn btn--ghost" data-close>Cancel</button>
+          <button class="btn btn--primary" data-close>Confirm</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="toasts"></div>
+    <script src="/js/components.js"></script>
+  </body>
+</html>
