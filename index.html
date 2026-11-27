@@ -16,7 +16,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Doto:wght@400..900&family=Geist:wght@300..700&family=Geist+Mono:wght@400..700&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" type="image/x-icon" href="/images/star_favicon.png" />
@@ -46,27 +46,23 @@
       <div class="desktop-app-icons">
         <div class="app-icon desktop-icon" data-window="Calculator">
           <div class="app-icon__tile glass" data-tint="#8e8e93">
-            <i class="fa-solid fa-calculator"></i>
+            <i class="fa-solid fa-calculator"></i><span>Calculator</span>
           </div>
-          <span>Calculator</span>
         </div>
         <div class="app-icon desktop-icon" data-window="Notepad">
           <div class="app-icon__tile glass" data-tint="#f5c542">
-            <i class="fa-solid fa-note-sticky"></i>
+            <i class="fa-solid fa-note-sticky"></i><span>Notepad</span>
           </div>
-          <span>Notepad</span>
         </div>
         <div class="app-icon desktop-icon" data-window="Playlist">
           <div class="app-icon__tile glass" data-tint="#6c7ae0">
-            <i class="fa-solid fa-music"></i>
+            <i class="fa-solid fa-music"></i><span>Playlist</span>
           </div>
-          <span>Playlist</span>
         </div>
         <div class="app-icon desktop-icon" data-window="Clicker">
           <div class="app-icon__tile glass" data-tint="#d2783c">
-            <i class="fa-solid fa-cookie-bite"></i>
+            <i class="fa-solid fa-cookie-bite"></i><span>Clicker</span>
           </div>
-          <span>Clicker</span>
         </div>
       </div>
       <div class="app-icons">
@@ -75,54 +71,46 @@
           class="app-icon"
           target="_blank"
           ><div class="app-icon__tile glass" data-tint="#0a66c2">
-            <i class="fa-brands fa-linkedin"></i>
-          </div>
-          <span>LinkedIn</span></a
+            <i class="fa-brands fa-linkedin"></i><span>LinkedIn</span>
+          </div></a
         >
         <a href="https://github.com/Elan-Rubin" class="app-icon" target="_blank"
           ><div class="app-icon__tile glass" data-tint="#1e1e1e">
-            <i class="fa-brands fa-github"></i>
-          </div>
-          <span>GitHub</span></a
+            <i class="fa-brands fa-github"></i><span>GitHub</span>
+          </div></a
         >
-        <div></div>
         <a
           class="app-icon app-icon--disabled"
           aria-disabled="true"
           title="coming soon"
           ><i class="dnd" aria-hidden="true"></i>
           <div class="app-icon__tile glass" data-tint="#2f7fd6">
-            <i class="fa-solid fa-envelope"></i>
-          </div>
-          <span>Email</span></a
+            <i class="fa-solid fa-envelope"></i><span>Email</span>
+          </div></a
         >
         <a
           href="https://elanmakesgames.itch.io/"
           class="app-icon"
           target="_blank"
           ><div class="app-icon__tile glass" data-tint="#fa5c5c">
-            <i class="fa-brands fa-itch-io"></i>
-          </div>
-          <span>itch.io</span></a
+            <i class="fa-brands fa-itch-io"></i><span>itch.io</span>
+          </div></a
         >
-        <div></div>
         <a
           href="https://www.etsy.com/shop/Legoco"
           class="app-icon"
           target="_blank"
           ><div class="app-icon__tile glass" data-tint="#f16521">
-            <i class="fa-brands fa-etsy"></i>
-          </div>
-          <span>Etsy</span></a
+            <i class="fa-brands fa-etsy"></i><span>Etsy</span>
+          </div></a
         >
         <a
           href="https://www.instagram.com/elan_rubin/"
           class="app-icon"
           target="_blank"
           ><div class="app-icon__tile glass" data-tint="#c13584">
-            <i class="fa-brands fa-instagram"></i>
-          </div>
-          <span>Instagram</span></a
+            <i class="fa-brands fa-instagram"></i><span>Instagram</span>
+          </div></a
         >
       </div>
       <div
@@ -155,7 +143,7 @@
 
       <div
         class="window glass"
-        style="top: calc(100vh - 25rem); left: calc(100vw - 46rem)"
+        style="top: calc(100vh - 28.5rem); left: calc(100vw - 51rem)"
       >
         <div class="window-header">
           <div class="window-title">Calculator</div>
@@ -213,6 +201,18 @@
             </button>
             <button class="calc-button" onclick="appendToDisplay('/')">
               <i class="fa-solid fa-divide"></i>
+            </button>
+            <button class="calc-button" onclick="appendToDisplay('.')">
+              .
+            </button>
+            <button class="calc-button" onclick="backspaceDisplay()">
+              <i class="fa-solid fa-delete-left"></i>
+            </button>
+            <button class="calc-button" onclick="appendToDisplay('(')">
+              (
+            </button>
+            <button class="calc-button" onclick="appendToDisplay(')')">
+              )
             </button>
           </div>
         </div>

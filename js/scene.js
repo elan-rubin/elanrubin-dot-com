@@ -162,7 +162,7 @@ float fbm(vec2 p) {
 }
 
 vec3 base(vec2 p, float soft, float m) {
-  vec2 rough = (vec2(vnoise(p * 0.16), vnoise(p * 0.16 + 7.3)) - 0.5) * 1.7;
+  vec2 rough = vec2(sin(p.y * 0.021 + uTime * 0.5 + vnoise(p * 0.006) * 6.0), sin(p.x * 0.019 - uTime * 0.4 + vnoise(p * 0.006 + 4.0) * 6.0)) * 2.2;
   vec2 pr = p + rough;
   vec2 n = p / uVP;
   vec3 c = vec3(0.034, 0.039, 0.036);
@@ -174,21 +174,11 @@ vec3 base(vec2 p, float soft, float m) {
   float mask = smoothstep(1.0, 0.1, length((n - vec2(0.5, 0.4)) / vec2(0.85, 0.9)));
   c += vec3(0.085) * dotp * mask * (1.0 - soft * 0.6);
 
-  float R = min(uVP.x * 0.23, 224.0);
-  vec2 rc = vec2(uVP.x * 1.08 - R, uVP.y * 0.08 + R);
-  rc += vec2(sin(uTime * 0.07), cos(uTime * 0.05)) * 14.0;
-  float r = length(pr - rc);
-  float inside = 1.0 - smoothstep(R - 1.0, R, r);
-  float side = smoothstep(rc.x - 0.06 * R, rc.x, p.x);
-  float ring = 1.0 - smoothstep(0.0, 1.3, abs(mod(r, 7.0) - 3.5) - 2.2);
-  c += vec3(0.11) * ring * inside * side * (1.0 - soft * 0.5);
-  c += vec3(0.02) * inside * step(rc.x, p.x);
-
   vec2 q = p / uVP.y;
   float t = uTime * 0.02;
   vec2 w = vec2(fbm(q * 1.6 + t), fbm(q * 1.6 - t + 9.0));
   float nz = fbm(q * 1.4 + w * 0.9 + vec2(t, -t * 0.6));
-  float f = (nz * 1.5 + m * 0.8) * 11.0 + (vnoise(p * 0.2) - 0.5) * 0.3;
+  float f = (nz * 1.5 + m * 0.8) * 11.0 + sin(p.x * 0.012 + p.y * 0.009 + uTime * 0.3) * 0.06;
   float line = 1.0 - smoothstep(0.0, 1.1 + soft * 6.0, abs(fract(f - 0.5) - 0.5) / max(fwidth(f), 1e-4));
   float major = step(abs(mod(floor(f + 0.5), 5.0)), 0.5);
   c += vec3(0.5, 0.72, 0.56) * line * mix(0.085, 0.19, major) * mix(1.0, 0.5, soft);
@@ -652,7 +642,7 @@ function start(root) {
         !item.isWindow &&
         item.el.closest(".app-icon")?.matches(":hover")
       ) {
-        targetScale = item.el.closest(".app-icon--disabled") ? 1 : 1.14;
+        targetScale = item.el.closest(".app-icon--disabled") ? 1 : 1.06;
       }
       item.vx += (stiff * (item.cx - item.x) - damp * item.vx) * dt;
       item.vy += (stiff * (item.cy - item.y) - damp * item.vy) * dt;
@@ -701,7 +691,7 @@ function start(root) {
       boxes.set([item.box.cx, item.box.cy, item.box.hw, item.box.hh], i * 4);
       props.set(
         [
-          item.isWindow ? 12 : 16,
+          item.isWindow ? 12 : item.h / 2,
           item.isWindow ? 36 : 12,
           item.mat + (item.isWindow ? 0 : 10),
           item.alpha,

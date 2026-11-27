@@ -2,6 +2,14 @@
 
 let zIndex = 1;
 
+function focusWindow(win) {
+  win.style.zIndex = ++zIndex;
+  document.querySelectorAll(".window[data-top]").forEach((other) => {
+    delete other.dataset.top;
+  });
+  win.dataset.top = "";
+}
+
 function dragElement(elmnt) {
   const header = elmnt.querySelector(".window-header");
   let grabX = 0;
@@ -15,7 +23,7 @@ function dragElement(elmnt) {
     grabX = e.clientX - elmnt.offsetLeft;
     grabY = e.clientY - elmnt.offsetTop;
     header.setPointerCapture(e.pointerId);
-    elmnt.style.zIndex = ++zIndex;
+    focusWindow(elmnt);
     elmnt.dataset.dragging = "";
   });
 
@@ -76,13 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setupWindowControls(windows[i]);
     windows[i].style.zIndex = ++zIndex;
     const raise = windows[i];
-    raise.addEventListener(
-      "pointerdown",
-      () => {
-        raise.style.zIndex = ++zIndex;
-      },
-      true,
-    );
+    raise.addEventListener("pointerdown", () => focusWindow(raise), true);
   }
 
   const notepadContent = document.getElementById("notepadContent");
@@ -91,29 +93,106 @@ document.addEventListener("DOMContentLoaded", function () {
   animateTyping(notepadContent, notepadText, 25);
 });
 
+const CALC_MAX = 18;
+
+function calcDisplay() {
+  return document.getElementById("display");
+}
+
+function evaluateExpression(text) {
+  const clean = text.replace(/\s/g, "");
+  const tokens = clean.match(/\d+\.?\d*|\.\d+|[-+*/()]/g);
+  if (!tokens || tokens.join("") !== clean) throw new Error("bad input");
+  let i = 0;
+  const peek = () => tokens[i];
+  const next = () => tokens[i++];
+  const expr = () => {
+    let value = term();
+    while (peek() === "+" || peek() === "-") {
+      const op = next();
+      const rhs = term();
+      value = op === "+" ? value + rhs : value - rhs;
+    }
+    return value;
+  };
+  const term = () => {
+    let value = factor();
+    while (peek() === "*" || peek() === "/") {
+      const op = next();
+      const rhs = factor();
+      value = op === "*" ? value * rhs : value / rhs;
+    }
+    return value;
+  };
+  const factor = () => {
+    const token = next();
+    if (token === "-") return -factor();
+    if (token === "+") return factor();
+    if (token === "(") {
+      const value = expr();
+      if (next() !== ")") throw new Error("unclosed");
+      return value;
+    }
+    const number = Number(token);
+    if (token === undefined || Number.isNaN(number))
+      throw new Error("bad input");
+    return number;
+  };
+  const result = expr();
+  if (i !== tokens.length || !Number.isFinite(result))
+    throw new Error("bad input");
+  return result;
+}
+
 function appendToDisplay(value) {
-  document.getElementById("display").value += value;
+  const display = calcDisplay();
+  const state = display.dataset.state;
+  if (state === "error" || (state === "done" && /[\d.(]/.test(value))) {
+    display.value = "";
+  }
+  delete display.dataset.state;
+  if (display.value.length >= CALC_MAX) return;
+  display.value += value;
+}
+
+function backspaceDisplay() {
+  const display = calcDisplay();
+  if (display.dataset.state === "error") display.value = "";
+  delete display.dataset.state;
+  display.value = display.value.slice(0, -1);
 }
 
 function clearDisplay() {
-  document.getElementById("display").value = "";
+  const display = calcDisplay();
+  display.value = "";
+  delete display.dataset.state;
 }
 
 function calculate() {
-  const display = document.getElementById("display");
-  display.value = "I ❤ elanrubin.com";
-  display.classList.add("flash");
-
-  let flashCount = 0;
-  const flashInterval = setInterval(() => {
-    flashCount++;
-    if (flashCount >= 1) {
-      clearInterval(flashInterval);
-      display.classList.remove("flash");
-      setTimeout(clearDisplay, 500);
-    }
-  }, 1000);
+  const display = calcDisplay();
+  if (!display.value) return;
+  try {
+    const result = evaluateExpression(display.value);
+    display.value = String(Number(result.toPrecision(12)));
+    display.dataset.state = "done";
+  } catch {
+    display.value = "ERR";
+    display.dataset.state = "error";
+  }
 }
+
+document.addEventListener("keydown", (event) => {
+  const calc = document.querySelector(".window[data-top] .calculator");
+  if (!calc || calc.closest(".window").style.display === "none") return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const key = event.key;
+  if (/^[\d.+\-*/()]$/.test(key)) appendToDisplay(key);
+  else if (key === "Enter" || key === "=") calculate();
+  else if (key === "Backspace") backspaceDisplay();
+  else if (key === "Escape" || key.toLowerCase() === "c") clearDisplay();
+  else return;
+  event.preventDefault();
+});
 
 //app icon code
 
@@ -172,7 +251,7 @@ async function toggleWindow(windowName) {
     if (windowStates[windowName]) {
       windowElement.style.display = "block";
       windowElement.style.animation = "openWindow 0.3s";
-      windowElement.style.zIndex = ++zIndex; // Bring to front
+      focusWindow(windowElement);
       addTerminalCommand(`launch ${windowName.toLowerCase()}.exe`);
     } else {
       windowElement.style.animation = "closeWindow 0.3s";
