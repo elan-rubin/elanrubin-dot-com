@@ -1,0 +1,131 @@
+:root {
+  --hue: 140;
+  --accent: oklch(0.78 0.19 var(--hue));
+  --accent-dim: oklch(0.62 0.14 var(--hue));
+  --accent-glow: color-mix(in oklch, var(--accent) 38%, transparent);
+  --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+  --on-accent: oklch(0.15 0.03 var(--hue));
+
+  --bg: oklch(0.12 0.004 var(--hue));
+  --bg-raised: oklch(0.16 0.005 var(--hue));
+  --surface: oklch(0.2 0.006 var(--hue));
+  --surface-2: oklch(0.26 0.007 var(--hue));
+  --text: oklch(0.97 0.003 var(--hue));
+  --text-dim: oklch(0.76 0.006 var(--hue));
+  --text-muted: oklch(0.58 0.006 var(--hue));
+  --line: rgb(255 255 255 / 0.09);
+  --line-strong: rgb(255 255 255 / 0.18);
+
+  --danger: oklch(0.66 0.22 25);
+  --warn: oklch(0.82 0.16 85);
+  --info: oklch(0.74 0.12 235);
+
+  --glass: rgb(255 255 255 / 0.06);
+  --glass-strong: rgb(255 255 255 / 0.11);
+  --glass-blur: 22px;
+  --glass-sat: 1.7;
+
+  --font-display: "Doto", "Space Mono", monospace;
+  --font-body: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+  --text-3xl: clamp(3rem, 8vw, 6rem);
+
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 5rem;
+
+  --radius-sm: 8px;
+  --radius: 16px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+
+  --shadow: 0 12px 40px rgb(0 0 0 / 0.45);
+  --shadow-sm: 0 4px 14px rgb(0 0 0 / 0.4);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fast: 140ms;
+  --base: 260ms;
+  --slow: 520ms;
+
+  --page-width: 1180px;
+  --nav-h: 4rem;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
