@@ -611,3 +611,63 @@ body {
   color: var(--accent);
   border-color: color-mix(in oklch, var(--accent) 45%, transparent);
 }
+
+.app-dock {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 5rem);
+  gap: 1.1rem 1rem;
+  padding: 1.25rem 1.35rem 1.1rem;
+  border-radius: 30px;
+}
+
+.app-icon {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  width: 5rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.app-icon__tile {
+  display: grid;
+  place-content: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  border-radius: 16px;
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.app-icon__tile :where(i[class*="fa-"]) {
+  color: inherit;
+}
+
+.app-icon span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.app-icon:hover span {
+  color: var(--text);
+}
+
+.app-icon.is-open span::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 0.45em;
+  vertical-align: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}

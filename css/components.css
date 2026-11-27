@@ -1669,3 +1669,18 @@
 .btn--primary :where(i[class*="fa-"]) {
   color: inherit;
 }
+
+.gl [data-scene] .app-dock,
+.gl [data-scene] .app-icon__tile {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: none;
+}
+
+.gl [data-scene] .app-dock::before,
+.gl [data-scene] .app-icon__tile::before {
+  content: none;
+}

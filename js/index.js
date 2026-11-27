@@ -329,6 +329,8 @@ document.addEventListener("site:launch", (event) => {
 document.addEventListener("click", (event) => {
   const launcher = event.target.closest(".task-launch");
   if (launcher) toggleWindow(launcher.dataset.launch);
+  const icon = event.target.closest(".app-icon[data-launch]");
+  if (icon) emit("launch", { name: icon.dataset.launch, action: "launch" });
 });
 
 setInterval(updateTime, 1000);

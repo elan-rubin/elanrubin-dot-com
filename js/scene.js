@@ -55,7 +55,7 @@ function normalizeTint(hex) {
   const chroma = Math.min(c, TINT_MAX_C);
   return {
     rgb: fromOklch(TINT_L, chroma, h),
-    ink: `oklch(0.9 ${(chroma * 0.55).toFixed(3)} ${((h * 180) / Math.PI).toFixed(1)})`,
+    ink: `oklch(0.2 ${(chroma * 0.55).toFixed(3)} ${((h * 180) / Math.PI).toFixed(1)})`,
   };
 }
 
@@ -106,6 +106,17 @@ float scene(vec2 p) {
   return d;
 }
 
+float tilesD(vec2 p) {
+  float d = 1e4;
+  for (int i = 0; i < ${MAX}; i++) {
+    if (i >= uCount) break;
+    if (step(9.5, uProp[i].z) > 0.5) {
+      d = min(d, sdBox(p - uBox[i].xy, uBox[i].zw, uProp[i].x));
+    }
+  }
+  return d;
+}
+
 vec2 mats(vec2 p, out vec3 tintCol, out float tintAmt) {
   float ws = 0.0;
   float black = 0.0;
@@ -117,8 +128,8 @@ vec2 mats(vec2 p, out vec3 tintCol, out float tintAmt) {
     vec4 b = uBox[i];
     vec4 pr = uProp[i];
     float di = sdBox(p - b.xy, b.zw, pr.x) + (1.0 - pr.w) * 80.0;
-    float w = exp(-max(di, 0.0) / 22.0);
     float isTile = step(9.5, pr.z);
+    float w = exp(-max(di, 0.0) / mix(22.0, 7.0, isTile)) * (1.0 - step(40.0, pr.y));
     float m = pr.z - isTile * 10.0;
     ws += w;
     black += w * step(0.5, m) * step(m, 1.5);
@@ -127,7 +138,7 @@ vec2 mats(vec2 p, out vec3 tintCol, out float tintAmt) {
     tintW += w * uTint[i].a;
   }
   tintCol = tintSum / max(tintW, 1e-4);
-  tintAmt = tintW / max(ws, 1e-4);
+  tintAmt = clamp(tintW, 0.0, 1.0);
   return vec2(black, tile) / max(ws, 1e-4);
 }
 
@@ -150,18 +161,7 @@ float vnoise(vec2 p) {
   );
 }
 
-float fbm(vec2 p) {
-  float s = 0.0;
-  float a = 0.5;
-  for (int i = 0; i < 4; i++) {
-    s += a * vnoise(p);
-    p = p * 2.03 + 17.1;
-    a *= 0.5;
-  }
-  return s;
-}
-
-vec3 base(vec2 p, float soft, float m) {
+vec3 base(vec2 p, float soft) {
   vec2 rough = vec2(sin(p.y * 0.021 + uTime * 0.5 + vnoise(p * 0.006) * 6.0), sin(p.x * 0.019 - uTime * 0.4 + vnoise(p * 0.006 + 4.0) * 6.0)) * 2.2;
   vec2 pr = p + rough;
   vec2 n = p / uVP;
@@ -173,15 +173,6 @@ vec3 base(vec2 p, float soft, float m) {
   float dotp = 1.0 - smoothstep(0.7, 1.4, length(g));
   float mask = smoothstep(1.0, 0.1, length((n - vec2(0.5, 0.4)) / vec2(0.85, 0.9)));
   c += vec3(0.085) * dotp * mask * (1.0 - soft * 0.6);
-
-  vec2 q = p / uVP.y;
-  float t = uTime * 0.02;
-  vec2 w = vec2(fbm(q * 1.6 + t), fbm(q * 1.6 - t + 9.0));
-  float nz = fbm(q * 1.4 + w * 0.9 + vec2(t, -t * 0.6));
-  float f = (nz * 1.5 + m * 0.8) * 11.0 + sin(p.x * 0.012 + p.y * 0.009 + uTime * 0.3) * 0.06;
-  float line = 1.0 - smoothstep(0.0, 1.1 + soft * 6.0, abs(fract(f - 0.5) - 0.5) / max(fwidth(f), 1e-4));
-  float major = step(abs(mod(floor(f + 0.5), 5.0)), 0.5);
-  c += vec3(0.5, 0.72, 0.56) * line * mix(0.085, 0.19, major) * mix(1.0, 0.5, soft);
 
   vec4 wv = web(pr, soft);
   return c * (1.0 - wv.a) + wv.rgb;
@@ -195,8 +186,7 @@ void main() {
   vec2 mix3 = mats(p, tintCol, tintAmt);
   float fBlack = mix3.x;
   float tile = mix3.y;
-  float m = exp(-max(D, 0.0) / 240.0);
-  vec3 col = base(p, 0.0, m);
+  vec3 col = base(p, 0.0);
 
   float shadow = smoothstep(44.0, -8.0, scene(p - vec2(0.0, 14.0))) * 0.55;
   col *= 1.0 - shadow * smoothstep(-2.0, 6.0, D);
@@ -218,11 +208,11 @@ void main() {
     float glyph = 1.0 - smoothstep(0.7, 1.3, length(gg));
 
     vec2 p2 = p + n * (1.0 - edge) * (1.0 - edge) * 26.0;
-    vec3 glass = base(p2, 1.0, m) * 0.4 + vec3(0.016, 0.018, 0.017);
+    vec3 glass = base(p2, 1.0) * 0.4 + vec3(0.016, 0.018, 0.017);
     glass += vec3(0.028) * glyph * (0.4 + 0.6 * edge);
     glass += rim * (0.15 + 0.85 * lit) * 0.16;
 
-    vec3 tinted = base(p2, 1.0, m) * 0.2 + tintCol * 0.95 + vec3(0.03) * glyph * (0.4 + 0.6 * edge);
+    vec3 tinted = base(p2, 1.0) * 0.2 + tintCol * 0.95 + vec3(0.03) * glyph * (0.4 + 0.6 * edge);
     tinted += rim * (0.15 + 0.85 * lit) * 0.14;
     glass = mix(glass, tinted, tintAmt);
 
@@ -231,6 +221,10 @@ void main() {
     float lines = mix(0.34, 0.3, fBlack);
     s += bandCol * band * (0.3 + 0.7 * lit) * lines;
     s += bandCol * inner * 0.06;
+    float dt = tilesD(p);
+    float tb = 1.0 - smoothstep(0.0, 1.3, abs(dt + 1.0));
+    s += vec3(1.0) * tb * 0.34 * (0.3 + 0.7 * lit);
+    s += vec3(0.03) * smoothstep(1.0, -1.0, dt);
     col = mix(col, s, smoothstep(0.8, -0.8, D));
   }
 
@@ -388,9 +382,13 @@ function start(root) {
     }
   });
 
-  const items = [...root.querySelectorAll(".window")].map((el) => ({
+  const items = [
+    ...root.querySelectorAll(".window, .app-dock, .app-icon__tile"),
+  ].map((el) => ({
     el,
     isWindow: el.classList.contains("window"),
+    isTile: el.classList.contains("app-icon__tile"),
+    isDock: el.classList.contains("app-dock"),
     mat: MATERIALS[(el.closest("[data-pane]") ?? el).dataset.pane] ?? 0,
     tint: el.dataset.tint ? normalizeTint(el.dataset.tint) : null,
     x: 0,
@@ -578,6 +576,15 @@ function start(root) {
       .sort((a, b) => a.z - b.z || a.order - b.order)
       .map(({ item }) => item);
 
+    const coverage =
+      stack.reduce((sum, win) => sum + win.w * win.h, 0) /
+      (innerWidth * innerHeight * 0.75);
+    const limit = clamp(
+      OVERLAP_LIMIT + (0.95 - OVERLAP_LIMIT) * clamp(coverage, 0, 1) ** 1.3,
+      OVERLAP_LIMIT,
+      0.95,
+    );
+
     stack.forEach((lower, index) => {
       if (lower.el.dataset.dragging !== undefined) return;
       if (Math.abs((lower.fx ?? 1e9) - lower.el.offsetLeft) > 1.5)
@@ -594,8 +601,8 @@ function start(root) {
           Math.max(lower.cy - lower.h / 2, upper.cy - upper.h / 2);
         if (ox <= 0 || oy <= 0) continue;
         const area = lower.w * lower.h;
-        if ((ox * oy) / area <= OVERLAP_LIMIT) continue;
-        const allowed = OVERLAP_LIMIT * area;
+        if ((ox * oy) / area <= limit + 0.05) continue;
+        const allowed = limit * area;
         const dirX = Math.sign(lower.cx - upper.cx) || 1;
         const dirY = Math.sign(lower.cy - upper.cy) || 1;
         const pushX = ox - allowed / oy;
@@ -604,7 +611,7 @@ function start(root) {
         const roomY = dirY > 0 ? innerHeight - lower.h - lower.fy : lower.fy;
         const useX =
           roomX >= pushX * 0.6 && (pushX <= pushY || roomY < pushY * 0.6);
-        const ease = Math.min(1, dt * 5);
+        const ease = Math.min(1, dt * 2.5);
         if (useX) lower.fx += dirX * pushX * ease;
         else lower.fy += dirY * pushY * ease;
         lower.fx = clamp(lower.fx, 0, Math.max(0, innerWidth - lower.w));
@@ -636,11 +643,8 @@ function start(root) {
       }
       let targetScale = 1;
       if (closing) targetScale = 0.84;
-      else if (
-        !item.isWindow &&
-        item.el.closest(".app-icon")?.matches(":hover")
-      ) {
-        targetScale = item.el.closest(".app-icon--disabled") ? 1 : 1.06;
+      else if (item.isTile && item.el.closest(".app-icon")?.matches(":hover")) {
+        targetScale = 1.1;
       }
       item.vx += (stiff * (item.cx - item.x) - damp * item.vx) * dt;
       item.vy += (stiff * (item.cy - item.y) - damp * item.vy) * dt;
@@ -689,9 +693,9 @@ function start(root) {
       boxes.set([item.box.cx, item.box.cy, item.box.hw, item.box.hh], i * 4);
       props.set(
         [
-          item.isWindow ? 12 : item.h / 2,
-          item.isWindow ? 36 : 12,
-          item.mat + (item.isWindow ? 0 : 10),
+          item.isWindow ? 12 : item.isDock ? 30 : 16,
+          item.isWindow ? 36 : item.isDock ? 44 : 12,
+          item.mat + (item.isTile ? 10 : 0),
           item.alpha,
         ],
         i * 4,

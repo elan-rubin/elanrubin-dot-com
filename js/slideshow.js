@@ -47,38 +47,6 @@ const SLIDES = [
     tint: "#2f7fd6",
     disabled: true,
   },
-  {
-    kind: "app",
-    title: "Calculator",
-    meta: "window / bc",
-    icon: "fa-solid fa-calculator",
-    tint: "#8e8e93",
-    launch: "Calculator",
-  },
-  {
-    kind: "app",
-    title: "Notepad",
-    meta: "window / about.txt",
-    icon: "fa-solid fa-note-sticky",
-    tint: "#f5c542",
-    launch: "Notepad",
-  },
-  {
-    kind: "app",
-    title: "Playlist",
-    meta: "window / mpv",
-    icon: "fa-solid fa-music",
-    tint: "#6c7ae0",
-    launch: "Playlist",
-  },
-  {
-    kind: "app",
-    title: "Clicker",
-    meta: "window / clicker",
-    icon: "fa-solid fa-cookie-bite",
-    tint: "#d2783c",
-    launch: "Clicker",
-  },
 ];
 
 const TINT_L = 0.37;
@@ -127,8 +95,7 @@ function emit(type, detail) {
 }
 
 function build(root) {
-  const hasWindows = document.querySelector(".window[data-top], .calculator");
-  const slides = SLIDES.filter((slide) => slide.kind !== "app" || hasWindows);
+  const slides = SLIDES;
 
   const track = document.createElement("div");
   track.className = "slides";
@@ -136,7 +103,7 @@ function build(root) {
   slides.forEach((slide, index) => {
     const { c, h } = toOklch(slide.tint);
     const chroma = Math.min(c, TINT_MAX_C);
-    const tag = slide.href ? "a" : slide.launch ? "button" : "div";
+    const tag = slide.href ? "a" : "div";
     const card = document.createElement(tag);
     card.className = "capsule";
     card.dataset.index = index;
@@ -148,10 +115,6 @@ function build(root) {
       card.href = slide.href;
       card.target = "_blank";
       card.rel = "noopener";
-    }
-    if (slide.launch) {
-      card.type = "button";
-      card.dataset.launch = slide.launch;
     }
     if (slide.disabled) card.setAttribute("aria-disabled", "true");
     card.innerHTML = `
@@ -276,13 +239,6 @@ function build(root) {
     },
     true,
   );
-
-  track.addEventListener("click", (event) => {
-    const card = event.target.closest(".capsule");
-    if (!card || card.getAttribute("aria-disabled") === "true") return;
-    if (card.dataset.launch)
-      emit("launch", { name: card.dataset.launch, action: "launch" });
-  });
 
   show(0);
   restart();
