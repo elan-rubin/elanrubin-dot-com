@@ -39,6 +39,8 @@ body {
 }
 
 .app-icon {
+  --tile: 4rem;
+  position: relative;
   color: var(--text-dim);
   text-decoration: none;
 }
@@ -71,6 +73,15 @@ body {
 }
 
 .app-icon--disabled {
-  opacity: 0.35;
   cursor: not-allowed;
+}
+
+.app-icon--disabled .app-icon__tile,
+.app-icon--disabled span {
+  opacity: 0.4;
+}
+
+.app-icon .dnd {
+  top: -0.3rem;
+  left: calc(50% + var(--tile) / 2 - 0.65rem);
 }

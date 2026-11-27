@@ -39,7 +39,9 @@
   --glass-blur: 22px;
   --glass-sat: 1.7;
 
-  --font-display: "Blaec", "Geist Mono", monospace;
+  --font-display: "Geist Mono", ui-monospace, monospace;
+  --font-headline: "Geist", system-ui, sans-serif;
+  --dnd: oklch(0.78 0.19 25);
   --font-body: "Geist", system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
 
