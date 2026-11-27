@@ -1,33 +1,30 @@
 const MAX = 24;
-const MATERIALS = { glass: 0, black: 1 };
 const OVERLAP_LIMIT = 0.4;
-const NODE_SPACING = 118;
+const NODE_SPACING = 150;
 const NODE_K = 2;
 const DEV_K = 2;
-const NODE_R = 2.2;
 const GLOW_RANGE = 130;
-const TINT_L = 0.37;
-const TINT_MAX_C = 0.085;
+const TILE_L = 0.37;
+const TILE_MAX_C = 0.085;
+const KIND = { glass: 0, matte: 1, tile: 2, dock: 3 };
 
-function toOklch([r, g, b]) {
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function toOklch(hex) {
+  const n = parseInt(hex.slice(1), 16);
   const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  const [lr, lg, lb] = [lin(r), lin(g), lin(b)];
-  const l = Math.cbrt(
-    0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb,
-  );
-  const m = Math.cbrt(
-    0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb,
-  );
-  const s = Math.cbrt(
-    0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb,
-  );
+  const [r, g, b] = [
+    (n >> 16) / 255,
+    ((n >> 8) & 255) / 255,
+    (n & 255) / 255,
+  ].map(lin);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
   const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
   const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
-  return [
-    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
-    Math.hypot(a, bb),
-    Math.atan2(bb, a),
-  ];
+  return { c: Math.hypot(a, bb), h: Math.atan2(bb, a) };
 }
 
 function fromOklch(L, C, h) {
@@ -45,17 +42,14 @@ function fromOklch(L, C, h) {
   ];
 }
 
-function normalizeTint(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const [, c, h] = toOklch([
-    (n >> 16) / 255,
-    ((n >> 8) & 255) / 255,
-    (n & 255) / 255,
-  ]);
-  const chroma = Math.min(c, TINT_MAX_C);
+function tintsFor(hex) {
+  const { c, h } = toOklch(hex);
+  const css = (rgb) => rgb.map((v) => Math.round(v * 255)).join(" ");
   return {
-    rgb: fromOklch(TINT_L, chroma, h),
-    ink: `oklch(0.2 ${(chroma * 0.55).toFixed(3)} ${((h * 180) / Math.PI).toFixed(1)})`,
+    fill: fromOklch(TILE_L, Math.min(c, TILE_MAX_C), h),
+    vivid: fromOklch(0.78, Math.min(Math.max(c, 0.02), 0.17), h),
+    ink: `oklch(0.2 ${(Math.min(c, TILE_MAX_C) * 0.55).toFixed(3)} ${((h * 180) / Math.PI).toFixed(1)})`,
+    css,
   };
 }
 
@@ -94,52 +88,19 @@ float smin(float a, float b, float k) {
   return min(a, b) - h * h * k * 0.25;
 }
 
-float scene(vec2 p) {
-  float d = 1e4;
-  for (int i = 0; i < ${MAX}; i++) {
-    if (i >= uCount) break;
-    vec4 b = uBox[i];
-    vec4 pr = uProp[i];
-    float di = sdBox(p - b.xy, b.zw, pr.x) + (1.0 - pr.w) * 80.0;
-    d = (i == 0) ? di : smin(d, di, pr.y);
-  }
-  return d;
-}
-
-float tilesD(vec2 p) {
-  float d = 1e4;
-  for (int i = 0; i < ${MAX}; i++) {
-    if (i >= uCount) break;
-    if (step(9.5, uProp[i].z) > 0.5) {
-      d = min(d, sdBox(p - uBox[i].xy, uBox[i].zw, uProp[i].x));
+float sdItem(vec2 p, int i) {
+  vec4 b = uBox[i];
+  vec4 pr = uProp[i];
+  float d = sdBox(p - b.xy, b.zw, pr.x);
+  if (pr.y > 2.5) {
+    for (int j = 0; j < ${MAX}; j++) {
+      if (j >= uCount) break;
+      if (uProp[j].y > 1.5 && uProp[j].y < 2.5) {
+        d = smin(d, sdBox(p - uBox[j].xy, uBox[j].zw, uProp[j].x), 24.0);
+      }
     }
   }
   return d;
-}
-
-vec2 mats(vec2 p, out vec3 tintCol, out float tintAmt) {
-  float ws = 0.0;
-  float black = 0.0;
-  float tile = 0.0;
-  vec3 tintSum = vec3(0.0);
-  float tintW = 0.0;
-  for (int i = 0; i < ${MAX}; i++) {
-    if (i >= uCount) break;
-    vec4 b = uBox[i];
-    vec4 pr = uProp[i];
-    float di = sdBox(p - b.xy, b.zw, pr.x) + (1.0 - pr.w) * 80.0;
-    float isTile = step(9.5, pr.z);
-    float w = exp(-max(di, 0.0) / mix(22.0, 7.0, isTile)) * (1.0 - step(40.0, pr.y));
-    float m = pr.z - isTile * 10.0;
-    ws += w;
-    black += w * step(0.5, m) * step(m, 1.5);
-    tile += w * isTile;
-    tintSum += w * uTint[i].rgb * uTint[i].a;
-    tintW += w * uTint[i].a;
-  }
-  tintCol = tintSum / max(tintW, 1e-4);
-  tintAmt = clamp(tintW, 0.0, 1.0);
-  return vec2(black, tile) / max(ws, 1e-4);
 }
 
 vec4 web(vec2 p, float soft) {
@@ -150,90 +111,108 @@ vec4 web(vec2 p, float soft) {
     + texture(uWeb, uv + vec2(0.0, o.y)) + texture(uWeb, uv - vec2(0.0, o.y))) * 0.18;
 }
 
-float vnoise(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  return mix(
-    mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
-    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
-    f.y
-  );
+float starForm(vec2 p, vec2 c, float R, float k, float sharp, float twist, float phase) {
+  vec2 d = p - c;
+  float r = length(d);
+  if (r > R * 1.3) return 0.0;
+  float th = atan(d.y, d.x) + phase + twist * r / R;
+  float lobe = pow(abs(cos(k * 0.5 * th)), sharp);
+  float Rt = R * (0.36 + 0.64 * lobe) * (1.0 + 0.07 * sin(uTime * 0.6 + th * 3.0));
+  float u = r / Rt;
+  if (u >= 1.0) return 0.0;
+  float h = sqrt(1.0 - u * u);
+  vec3 n = normalize(vec3(d / Rt, h * 1.25));
+  float lit = clamp(dot(n, normalize(vec3(-0.5, -0.6, 0.65))) * 0.85 + 0.18, 0.0, 1.0);
+  lit += pow(max(dot(n, normalize(vec3(-0.3, -0.4, 0.86))), 0.0), 16.0) * 0.55;
+  vec2 g = mat2(0.7071, -0.7071, 0.7071, 0.7071) * p / 6.5;
+  float dist = length(fract(g) - 0.5);
+  float rad = sqrt(clamp(lit, 0.0, 1.0)) * 0.56;
+  float dotm = 1.0 - smoothstep(rad - 0.1, rad + 0.04, dist);
+  return dotm * smoothstep(1.0, 0.93, u);
 }
 
 vec3 base(vec2 p, float soft) {
-  vec2 rough = vec2(sin(p.y * 0.021 + uTime * 0.18 + vnoise(p * 0.006) * 6.0), sin(p.x * 0.019 - uTime * 0.14 + vnoise(p * 0.006 + 4.0) * 6.0)) * 1.5;
+  vec2 rough = vec2(sin(p.y * 0.021 + uTime * 0.18), sin(p.x * 0.019 - uTime * 0.14)) * 1.4;
   vec2 pr = p + rough;
   vec2 n = p / uVP;
-  vec3 c = vec3(0.034, 0.039, 0.036);
-  c += ACC * 0.055 * exp(-length((n - vec2(0.2, 0.2)) * vec2(uVP.x / uVP.y, 1.0)) * 2.4);
-  c += ACC * 0.025 * exp(-length((n - vec2(0.85, 0.75)) * vec2(uVP.x / uVP.y, 1.0)) * 2.4);
+  float s = min(uVP.x, uVP.y);
+  vec3 c = vec3(0.03, 0.034, 0.032);
+  c += ACC * 0.04 * exp(-length((n - vec2(0.2, 0.2)) * vec2(uVP.x / uVP.y, 1.0)) * 2.4);
 
   vec2 g = mod(p, 18.0) - 9.0;
   float dotp = 1.0 - smoothstep(0.7, 1.4, length(g));
-  float mask = smoothstep(1.0, 0.1, length((n - vec2(0.5, 0.4)) / vec2(0.85, 0.9)));
-  c += vec3(0.085) * dotp * mask * (1.0 - soft * 0.6);
+  c += vec3(0.05) * dotp * (1.0 - soft * 0.6);
+
+  float t = uTime * 0.05;
+  float f = 0.0;
+  f += starForm(p, uVP * vec2(0.64 + 0.04 * sin(t), 0.2 + 0.03 * cos(t * 1.3)), s * 0.2, 8.0, 3.2, 0.0, t);
+  f += starForm(p, uVP * vec2(0.5 + 0.05 * cos(t * 0.8), 0.78 + 0.03 * sin(t)), s * 0.17, 4.0, 1.6, 0.0, -t * 0.7);
+  f += starForm(p, uVP * vec2(0.93, 0.5 + 0.06 * sin(t * 0.9)), s * 0.15, 5.0, 1.2, 2.6, t * 0.5);
+  c += vec3(0.78, 0.84, 0.8) * f * 0.5 * (1.0 - soft * 0.45);
 
   vec4 wv = web(pr, soft);
   return c * (1.0 - wv.a) + wv.rgb;
 }
 
+vec3 shade(vec2 p, int i, float d) {
+  vec4 b = uBox[i];
+  vec4 pr = uProp[i];
+  vec4 tn = uTint[i];
+  float kind = pr.y;
+  vec2 gr = vec2(
+    sdItem(p + vec2(1.0, 0.0), i) - sdItem(p - vec2(1.0, 0.0), i),
+    sdItem(p + vec2(0.0, 1.0), i) - sdItem(p - vec2(0.0, 1.0), i)
+  );
+  vec2 n = normalize(gr + 1e-5);
+  float edge = clamp(-d / 20.0, 0.0, 1.0);
+  float lit = max(dot(n, normalize(vec2(-0.55, -0.85))), 0.0);
+  float band = 1.0 - smoothstep(0.0, 1.5, abs(d + 1.1));
+  float inner = 1.0 - smoothstep(0.0, 0.9, abs(d + 6.0));
+  vec2 gg = mod(p, 14.0) - 7.0;
+  float glyph = 1.0 - smoothstep(0.7, 1.3, length(gg));
+  vec3 edgeCol = mix(vec3(1.0), tn.rgb, tn.a);
+  vec3 s;
+
+  if (kind < 0.5 || kind > 2.5) {
+    vec2 p2 = p + n * (1.0 - edge) * (1.0 - edge) * 26.0;
+    s = base(p2, 1.0) * 0.4 + vec3(0.016, 0.018, 0.017);
+    s += vec3(0.028) * glyph * (0.4 + 0.6 * edge);
+    s += pow(1.0 - edge, 3.0) * (0.15 + 0.85 * lit) * 0.16;
+    s += vec3(1.0) * band * (0.3 + 0.7 * lit) * 0.34;
+    s += vec3(1.0) * inner * 0.06;
+  } else if (kind < 1.5) {
+    s = vec3(0.028, 0.031, 0.029) + vec3(0.02) * glyph;
+    s += edgeCol * band * (0.3 + 0.7 * lit) * 0.62;
+    s += edgeCol * inner * 0.07;
+    vec2 q = abs(p - b.xy) - (b.zw - vec2(11.0));
+    s += edgeCol * (1.0 - smoothstep(1.1, 2.1, length(q))) * 0.5;
+  } else {
+    s = tn.rgb * 0.95 + vec3(0.05) * lit * (1.0 - edge);
+    s += vec3(1.0) * band * (0.3 + 0.7 * lit) * 0.4;
+    s += vec3(0.03) * glyph;
+  }
+  return s;
+}
+
 void main() {
   vec2 p = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) / uDpr;
-  float D = scene(p);
-  vec3 tintCol;
-  float tintAmt;
-  vec2 mix3 = mats(p, tintCol, tintAmt);
-  float fBlack = mix3.x;
-  float tile = mix3.y;
   vec3 col = base(p, 0.0);
 
-  float shadow = smoothstep(44.0, -8.0, scene(p - vec2(0.0, 14.0))) * 0.55;
-  col *= 1.0 - shadow * smoothstep(-2.0, 6.0, D);
-
-  if (D > 0.0) {
-    col *= 1.0 - tile * (1.0 - smoothstep(0.0, 5.0, D)) * 0.75;
-    col = mix(col, ACC, tile * (1.0 - smoothstep(0.0, 1.3, abs(D - 5.5))) * 0.32);
-  }
-
-  if (D < 1.0) {
-    vec2 n = normalize(vec2(dFdx(D), dFdy(D)) + 1e-5);
-    float edge = clamp(-D / 20.0, 0.0, 1.0);
-    float lit = max(dot(n, normalize(vec2(-0.55, -0.85))), 0.0);
-    float rim = pow(1.0 - edge, 3.0);
-    float band = 1.0 - smoothstep(0.0, 1.4, abs(D + 1.0));
-    float inner = 1.0 - smoothstep(0.0, 0.9, abs(D + 6.0));
-    vec3 bandCol = mix(vec3(1.0), ACC, tile * 0.85);
-    vec2 gg = mod(p, 14.0) - 7.0;
-    float glyph = 1.0 - smoothstep(0.7, 1.3, length(gg));
-
-    vec2 p2 = p + n * (1.0 - edge) * (1.0 - edge) * 26.0;
-    vec3 glass = base(p2, 1.0) * 0.4 + vec3(0.016, 0.018, 0.017);
-    glass += vec3(0.028) * glyph * (0.4 + 0.6 * edge);
-    glass += rim * (0.15 + 0.85 * lit) * 0.16;
-
-    vec3 tinted = base(p2, 1.0) * 0.2 + tintCol * 0.95 + vec3(0.03) * glyph * (0.4 + 0.6 * edge);
-    tinted += rim * (0.15 + 0.85 * lit) * 0.14;
-    glass = mix(glass, tinted, tintAmt);
-
-    vec3 black = vec3(0.03, 0.033, 0.031) + vec3(0.022) * glyph * 0.6;
-    vec3 s = mix(glass, black, fBlack);
-    float lines = mix(0.34, 0.3, fBlack);
-    s += bandCol * band * (0.3 + 0.7 * lit) * lines;
-    s += bandCol * inner * 0.06;
-    float dt = tilesD(p);
-    float tb = 1.0 - smoothstep(0.0, 1.3, abs(dt + 1.0));
-    s += vec3(1.0) * tb * 0.34 * (0.3 + 0.7 * lit);
-    s += vec3(0.03) * smoothstep(1.0, -1.0, dt);
-    col = mix(col, s, smoothstep(0.8, -0.8, D));
+  for (int i = 0; i < ${MAX}; i++) {
+    if (i >= uCount) break;
+    vec4 pr = uProp[i];
+    float d = sdItem(p, i);
+    float tile = step(1.5, pr.y) * step(pr.y, 2.5);
+    float sh = smoothstep(34.0, -6.0, sdItem(p - vec2(0.0, 12.0), i)) * 0.5 * pr.w * (1.0 - tile);
+    col *= 1.0 - sh * smoothstep(-1.0, 5.0, d);
+    float cov = smoothstep(0.9, -0.9, d) * pr.w;
+    if (cov < 0.003) continue;
+    col = mix(col, shade(p, i, d), cov);
   }
 
   col += (hash(gl_FragCoord.xy) - 0.5) / 255.0;
   outColor = vec4(col, 1.0);
 }`;
-
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function compile(gl, type, source) {
   const shader = gl.createShader(type);
@@ -295,12 +274,6 @@ function scatter(width, height) {
   return { nodes, edges };
 }
 
-function outside(box, x, y) {
-  const dx = Math.max(Math.abs(x - box.cx) - box.hw, 0);
-  const dy = Math.max(Math.abs(y - box.cy) - box.hh, 0);
-  return { d: Math.hypot(dx, dy), dx, dy };
-}
-
 function start(root) {
   const canvas = document.createElement("canvas");
   canvas.className = "scene-canvas";
@@ -356,21 +329,25 @@ function start(root) {
   root.prepend(canvas);
   document.documentElement.classList.add("gl");
 
-  let dpr = 1;
+  let quality = 1;
+  let needSettle = true;
   let web = scatter(innerWidth, innerHeight);
-  let webScale = 1;
+  const webScale = 0.6;
   const resize = () => {
-    dpr = Math.min(devicePixelRatio || 1, 1.5);
+    const dpr = Math.min(devicePixelRatio || 1, 1.5) * quality;
     canvas.width = Math.round(innerWidth * dpr);
     canvas.height = Math.round(innerHeight * dpr);
-    webScale = Math.min(dpr, 1);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  };
+  const resizeAll = () => {
+    resize();
     webCanvas.width = Math.round(innerWidth * webScale);
     webCanvas.height = Math.round(innerHeight * webScale);
-    gl.viewport(0, 0, canvas.width, canvas.height);
     web = scatter(innerWidth, innerHeight);
+    needSettle = true;
   };
-  resize();
-  addEventListener("resize", resize);
+  resizeAll();
+  addEventListener("resize", resizeAll);
 
   const mouse = { x: -999, y: -999, tx: -999, ty: -999 };
   addEventListener("pointermove", (event) => {
@@ -382,33 +359,55 @@ function start(root) {
     }
   });
 
+  document.addEventListener("site:window", () => (needSettle = true));
+  document.addEventListener("site:move", () => (needSettle = true));
+
   const items = [
     ...root.querySelectorAll(".window, .app-dock, .app-icon__tile"),
-  ].map((el) => ({
-    el,
-    isWindow: el.classList.contains("window"),
-    isTile: el.classList.contains("app-icon__tile"),
-    isDock: el.classList.contains("app-dock"),
-    mat: MATERIALS[(el.closest("[data-pane]") ?? el).dataset.pane] ?? 0,
-    tint: el.dataset.tint ? normalizeTint(el.dataset.tint) : null,
-    x: 0,
-    y: 0,
-    vx: 0,
-    vy: 0,
-    s: 1,
-    vs: 0,
-    alpha: 0,
-    shown: false,
-    dx: 0,
-    dy: 0,
-    sx: 1,
-    sy: 1,
-    mask: "",
-    box: null,
-  }));
-
-  items.forEach((item) => {
-    if (item.tint) item.el.style.color = item.tint.ink;
+  ].map((el) => {
+    const isWindow = el.classList.contains("window");
+    const isTile = el.classList.contains("app-icon__tile");
+    const isDock = el.classList.contains("app-dock");
+    const tint = el.dataset.tint ? tintsFor(el.dataset.tint) : null;
+    if (tint && isTile) el.style.color = tint.ink;
+    if (tint && isWindow) {
+      el.style.setProperty("--accent", `rgb(${tint.css(tint.vivid)})`);
+      el.style.setProperty(
+        "--accent-glow",
+        `rgb(${tint.css(tint.vivid)} / 0.38)`,
+      );
+      el.style.setProperty(
+        "--accent-soft",
+        `rgb(${tint.css(tint.vivid)} / 0.14)`,
+      );
+    }
+    return {
+      el,
+      isWindow,
+      isTile,
+      isDock,
+      kind: isDock
+        ? KIND.dock
+        : isTile
+          ? KIND.tile
+          : el.dataset.pane === "glass"
+            ? KIND.glass
+            : KIND.matte,
+      tint,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      s: 1,
+      vs: 0,
+      alpha: 0,
+      shown: false,
+      dx: 0,
+      dy: 0,
+      mask: "",
+      box: null,
+      target: null,
+    };
   });
 
   const boxes = new Float32Array(MAX * 4);
@@ -418,7 +417,7 @@ function start(root) {
   const damp = calm ? 60 : 26;
   const sStiff = calm ? 900 : 320;
   const sDamp = calm ? 60 : 26;
-  const amp = calm ? 0 : 16;
+  const amp = calm ? 0 : 14;
 
   const drawWeb = (now, live) => {
     const t = now / 1000;
@@ -457,15 +456,15 @@ function start(root) {
         }
         near = Math.max(near, 1 - clamp(d / GLOW_RANGE, 0, 1));
       });
-      const md = Math.hypot(tx - mouse.x, ty - mouse.y);
-      near = Math.max(near, 1 - clamp(md / GLOW_RANGE, 0, 1));
+      near = Math.max(
+        near,
+        1 - clamp(Math.hypot(tx - mouse.x, ty - mouse.y) / GLOW_RANGE, 0, 1),
+      );
       n.x += (tx - n.x) * 0.1;
       n.y += (ty - n.y) * 0.1;
       n.glow += (near - n.glow) * 0.08;
     });
 
-    ctx.lineCap = "round";
-    ctx.lineWidth = 1.3;
     const curve = (x0, y0, x1, y1, bend) => {
       const mx = (x0 + x1) / 2;
       const my = (y0 + y1) / 2;
@@ -481,11 +480,13 @@ function start(root) {
       ctx.stroke();
     };
 
+    ctx.lineCap = "round";
+    ctx.lineWidth = 1.3;
     web.edges.forEach(([i, j, bend, phase]) => {
       const a = web.nodes[i];
       const b = web.nodes[j];
       const g = Math.max(a.glow, b.glow);
-      ctx.strokeStyle = `rgba(120, 160, 128, ${0.12 + g * 0.45})`;
+      ctx.strokeStyle = `rgba(120, 160, 128, ${0.09 + g * 0.4})`;
       curve(
         a.x,
         a.y,
@@ -495,21 +496,20 @@ function start(root) {
       );
     });
 
-    ctx.lineWidth = 1.3;
-    ctx.strokeStyle = "rgba(110, 200, 125, 0.3)";
+    ctx.strokeStyle = "rgba(110, 200, 125, 0.26)";
     live.forEach((box) => {
       web.nodes
         .map((n) => ({ n, d: Math.hypot(n.x - box.cx, n.y - box.cy) }))
         .sort((p, q) => p.d - q.d)
         .slice(0, DEV_K)
-        .forEach(({ n }, k) => {
-          curve(box.cx, box.cy, n.x, n.y, k ? -0.18 : 0.22);
-        });
+        .forEach(({ n }, k) =>
+          curve(box.cx, box.cy, n.x, n.y, k ? -0.18 : 0.22),
+        );
     });
 
     web.nodes.forEach((n) => {
       const lift = n.glow;
-      ctx.strokeStyle = `rgba(${150 - lift * 53}, ${170 + lift * 65}, ${155 - lift * 40}, ${0.45 + lift * 0.5})`;
+      ctx.strokeStyle = `rgba(${150 - lift * 53}, ${170 + lift * 65}, ${155 - lift * 40}, ${0.4 + lift * 0.5})`;
       ctx.fillStyle = ctx.strokeStyle;
       ctx.lineWidth = 1.2;
       ctx.beginPath();
@@ -545,11 +545,108 @@ function start(root) {
     );
   };
 
+  const settle = (windows) => {
+    const stack = windows
+      .map((item, order) => ({
+        item,
+        order,
+        z: Number(item.el.style.zIndex) || 0,
+        x: item.el.offsetLeft,
+        y: item.el.offsetTop,
+        w: item.el.offsetWidth,
+        h: item.el.offsetHeight,
+      }))
+      .sort((a, b) => a.z - b.z || a.order - b.order);
+    const coverage =
+      stack.reduce((sum, win) => sum + win.w * win.h, 0) /
+      (innerWidth * innerHeight * 0.75);
+    const limit = clamp(
+      OVERLAP_LIMIT + (0.95 - OVERLAP_LIMIT) * clamp(coverage, 0, 1) ** 1.3,
+      OVERLAP_LIMIT,
+      0.95,
+    );
+
+    for (let pass = 0; pass < 8; pass++) {
+      let moved = false;
+      stack.forEach((lower, index) => {
+        if (lower.item.el.dataset.dragging !== undefined) return;
+        for (let j = index + 1; j < stack.length; j++) {
+          const upper = stack[j];
+          const ox =
+            Math.min(lower.x + lower.w, upper.x + upper.w) -
+            Math.max(lower.x, upper.x);
+          const oy =
+            Math.min(lower.y + lower.h, upper.y + upper.h) -
+            Math.max(lower.y, upper.y);
+          if (ox <= 0 || oy <= 0) continue;
+          const area = lower.w * lower.h;
+          if ((ox * oy) / area <= limit + 0.05) continue;
+          const allowed = limit * area;
+          const dirX =
+            Math.sign(lower.x + lower.w / 2 - (upper.x + upper.w / 2)) || 1;
+          const dirY =
+            Math.sign(lower.y + lower.h / 2 - (upper.y + upper.h / 2)) || 1;
+          const pushX = ox - allowed / oy;
+          const pushY = oy - allowed / ox;
+          const roomX = dirX > 0 ? innerWidth - lower.w - lower.x : lower.x;
+          const roomY = dirY > 0 ? innerHeight - lower.h - lower.y : lower.y;
+          const useX =
+            roomX >= pushX * 0.6 && (pushX <= pushY || roomY < pushY * 0.6);
+          if (useX)
+            lower.x = clamp(
+              lower.x + dirX * pushX,
+              0,
+              Math.max(0, innerWidth - lower.w),
+            );
+          else
+            lower.y = clamp(
+              lower.y + dirY * pushY,
+              0,
+              Math.max(0, innerHeight - lower.h),
+            );
+          moved = true;
+          break;
+        }
+      });
+      if (!moved) break;
+    }
+
+    stack.forEach((win) => {
+      const dx = win.x - win.item.el.offsetLeft;
+      const dy = win.y - win.item.el.offsetTop;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        win.item.target = {
+          x: win.x,
+          y: win.y,
+          fx: win.item.el.offsetLeft,
+          fy: win.item.el.offsetTop,
+        };
+      }
+    });
+  };
+
   let last = performance.now();
+  let avg = 16.7;
+  let tick = 0;
+  let fastFrames = 0;
 
   const frame = (now) => {
-    const dt = clamp((now - last) / 1000, 0, 1 / 40);
+    const raw = now - last;
+    const dt = clamp(raw / 1000, 0, 1 / 40);
     last = now;
+    avg = avg * 0.94 + raw * 0.06;
+    if (++tick % 40 === 0) {
+      if (avg > 24 && quality > 0.5) {
+        quality = Math.max(0.5, quality - 0.125);
+        resize();
+        fastFrames = 0;
+      } else if (avg < 17.6 && quality < 1 && ++fastFrames > 6) {
+        quality = Math.min(1, quality + 0.0625);
+        resize();
+        fastFrames = 0;
+      }
+    }
+
     mouse.x += (mouse.tx - mouse.x) * Math.min(1, dt * 8);
     mouse.y += (mouse.ty - mouse.y) * Math.min(1, dt * 8);
 
@@ -564,63 +661,34 @@ function start(root) {
       item.cy = rect.top + rect.height / 2 - item.dy;
     });
 
-    const stack = items
-      .filter((item) => item.isWindow && item.visible && !item.closing)
-      .map((item, order) => ({
-        item,
-        z: Number(item.el.style.zIndex) || 0,
-        order,
-      }))
-      .sort((a, b) => a.z - b.z || a.order - b.order)
-      .map(({ item }) => item);
-
-    const coverage =
-      stack.reduce((sum, win) => sum + win.w * win.h, 0) /
-      (innerWidth * innerHeight * 0.75);
-    const limit = clamp(
-      OVERLAP_LIMIT + (0.95 - OVERLAP_LIMIT) * clamp(coverage, 0, 1) ** 1.3,
-      OVERLAP_LIMIT,
-      0.95,
+    const windows = items.filter(
+      (item) => item.isWindow && item.visible && !item.closing,
     );
-
-    stack.forEach((lower, index) => {
-      if (lower.el.dataset.dragging !== undefined) return;
-      if (Math.abs((lower.fx ?? 1e9) - lower.el.offsetLeft) > 1.5)
-        lower.fx = lower.el.offsetLeft;
-      if (Math.abs((lower.fy ?? 1e9) - lower.el.offsetTop) > 1.5)
-        lower.fy = lower.el.offsetTop;
-      for (let j = index + 1; j < stack.length; j++) {
-        const upper = stack[j];
-        const ox =
-          Math.min(lower.cx + lower.w / 2, upper.cx + upper.w / 2) -
-          Math.max(lower.cx - lower.w / 2, upper.cx - upper.w / 2);
-        const oy =
-          Math.min(lower.cy + lower.h / 2, upper.cy + upper.h / 2) -
-          Math.max(lower.cy - lower.h / 2, upper.cy - upper.h / 2);
-        if (ox <= 0 || oy <= 0) continue;
-        const area = lower.w * lower.h;
-        if ((ox * oy) / area <= limit + 0.05) continue;
-        const allowed = limit * area;
-        const dirX = Math.sign(lower.cx - upper.cx) || 1;
-        const dirY = Math.sign(lower.cy - upper.cy) || 1;
-        const pushX = ox - allowed / oy;
-        const pushY = oy - allowed / ox;
-        const roomX = dirX > 0 ? innerWidth - lower.w - lower.fx : lower.fx;
-        const roomY = dirY > 0 ? innerHeight - lower.h - lower.fy : lower.fy;
-        const useX =
-          roomX >= pushX * 0.6 && (pushX <= pushY || roomY < pushY * 0.6);
-        const ease = Math.min(1, dt * 2.5);
-        if (useX) lower.fx += dirX * pushX * ease;
-        else lower.fy += dirY * pushY * ease;
-        lower.fx = clamp(lower.fx, 0, Math.max(0, innerWidth - lower.w));
-        lower.fy = clamp(lower.fy, 0, Math.max(0, innerHeight - lower.h));
-        lower.el.style.left = `${lower.fx}px`;
-        lower.el.style.top = `${lower.fy}px`;
-        break;
+    const anyDrag = windows.some(
+      (item) => item.el.dataset.dragging !== undefined,
+    );
+    if (needSettle && !anyDrag) {
+      needSettle = false;
+      settle(windows);
+    }
+    items.forEach((item) => {
+      if (!item.target) return;
+      if (item.el.dataset.dragging !== undefined) {
+        item.target = null;
+        return;
+      }
+      const t = item.target;
+      t.fx += (t.x - t.fx) * Math.min(1, dt * 5);
+      t.fy += (t.y - t.fy) * Math.min(1, dt * 5);
+      item.el.style.left = `${t.fx}px`;
+      item.el.style.top = `${t.fy}px`;
+      if (Math.abs(t.x - t.fx) < 0.4 && Math.abs(t.y - t.fy) < 0.4) {
+        item.el.style.left = `${t.x}px`;
+        item.el.style.top = `${t.y}px`;
+        item.target = null;
       }
     });
 
-    let count = 0;
     items.forEach((item) => {
       if (!item.visible) {
         item.shown = false;
@@ -628,8 +696,6 @@ function start(root) {
         item.box = null;
         return;
       }
-      const closing =
-        item.isWindow && item.el.style.animation.includes("close");
       if (!item.shown) {
         item.shown = true;
         item.x = item.cx;
@@ -641,11 +707,10 @@ function start(root) {
         item.alpha = item.isWindow && !booting ? 0 : 1;
       }
       let targetScale = 1;
-      if (closing) targetScale = 0.84;
-      else if (item.isTile && item.el.closest(".app-icon")?.matches(":hover")) {
+      if (item.closing) targetScale = 0.84;
+      else if (item.isTile && item.el.closest(".app-icon")?.matches(":hover"))
         targetScale = 1.1;
-      }
-      if (item.el.dataset.dragging !== undefined) {
+      if (item.el.dataset.dragging !== undefined || item.target) {
         item.x = item.cx;
         item.y = item.cy;
         item.vx = item.vy = 0;
@@ -656,54 +721,38 @@ function start(root) {
       item.y += item.vy * dt;
       item.vs += (sStiff * (targetScale - item.s) - sDamp * item.vs) * dt;
       item.s = clamp(item.s + item.vs * dt, 0.5, 1.4);
-      item.alpha += ((closing ? 0 : 1) - item.alpha) * Math.min(1, dt * 10);
-
+      item.alpha +=
+        ((item.closing ? 0 : 1) - item.alpha) * Math.min(1, dt * 10);
       item.dx = item.x - item.cx;
       item.dy = item.y - item.cy;
-
-      const sw = item.s;
-      const sh = item.s;
       item.el.style.transform = `translate(${item.dx}px, ${item.dy}px) scale(${item.s})`;
       if (item.isWindow) item.el.style.opacity = item.alpha.toFixed(3);
-
-      if (item.alpha < 0.01 || count >= MAX) {
-        item.box = null;
-        return;
-      }
-      item.box = {
-        cx: item.x,
-        cy: item.y,
-        hw: (item.w * sw) / 2,
-        hh: (item.h * sh) / 2,
-      };
-      const i = count++;
-      tints.set(item.tint ? [...item.tint.rgb, 1] : [0, 0, 0, 0], i * 4);
-      boxes.set([item.box.cx, item.box.cy, item.box.hw, item.box.hh], i * 4);
-      props.set(
-        [
-          item.isWindow ? 12 : item.isDock ? 30 : 16,
-          item.isWindow ? 36 : item.isDock ? 44 : 12,
-          item.mat + (item.isTile ? 10 : 0),
-          item.alpha,
-        ],
-        i * 4,
-      );
+      item.box =
+        item.alpha < 0.01
+          ? null
+          : {
+              cx: item.x,
+              cy: item.y,
+              hw: (item.w * item.s) / 2,
+              hh: (item.h * item.s) / 2,
+            };
     });
 
-    const windows = items
-      .filter((item) => item.isWindow && item.box)
+    const stacked = windows
+      .filter((item) => item.box)
       .map((item, order) => ({
         item,
         z: Number(item.el.style.zIndex) || 0,
         order,
       }))
-      .sort((a, b) => a.z - b.z || a.order - b.order);
+      .sort((a, b) => a.z - b.z || a.order - b.order)
+      .map(({ item }) => item);
 
-    windows.forEach(({ item }, index) => {
+    stacked.forEach((item, index) => {
       const own = item.box;
       const holes = [];
-      for (let j = index + 1; j < windows.length; j++) {
-        const other = windows[j].item.box;
+      for (let j = index + 1; j < stacked.length; j++) {
+        const other = stacked[j].box;
         const x0 = Math.max(own.cx - own.hw, other.cx - other.hw);
         const x1 = Math.min(own.cx + own.hw, other.cx + other.hw);
         const y0 = Math.max(own.cy - own.hh, other.cy - other.hh);
@@ -734,16 +783,41 @@ function start(root) {
         item.el.style.webkitMaskImage = "";
       });
 
-    drawWeb(
-      now,
-      items.filter((item) => item.box).map((item) => item.box),
-    );
+    const ordered = [
+      ...items.filter((item) => item.isDock && item.box),
+      ...items.filter((item) => item.isTile && item.box),
+      ...stacked,
+    ].slice(0, MAX);
+    ordered.forEach((item, i) => {
+      boxes.set([item.box.cx, item.box.cy, item.box.hw, item.box.hh], i * 4);
+      props.set(
+        [item.isWindow ? 12 : item.isDock ? 30 : 16, item.kind, 0, item.alpha],
+        i * 4,
+      );
+      tints.set(
+        item.tint
+          ? [
+              ...(item.isTile ? item.tint.fill : item.tint.vivid),
+              item.isTile ? 1 : 0.85,
+            ]
+          : [0, 0, 0, 0],
+        i * 4,
+      );
+    });
 
+    if (tick % 2 === 0 || anyDrag) {
+      drawWeb(
+        now,
+        ordered.map((item) => item.box),
+      );
+    }
+
+    const dpr = canvas.width / innerWidth;
     gl.uniform2f(uRes, canvas.width, canvas.height);
     gl.uniform2f(uVP, innerWidth, innerHeight);
     gl.uniform1f(uDpr, dpr);
     gl.uniform1f(uTime, now / 1000);
-    gl.uniform1i(uCount, count);
+    gl.uniform1i(uCount, ordered.length);
     gl.uniform4fv(uBox, boxes);
     gl.uniform4fv(uProp, props);
     gl.uniform4fv(uTint, tints);
