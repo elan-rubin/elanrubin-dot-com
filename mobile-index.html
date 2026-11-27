@@ -7,256 +7,22 @@
     <link rel="icon" type="image/x-icon" href="/images/star_favicon.png" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css"
     />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        height: 100%;
-        overflow-y: auto;
-        font-family:
-          "Segoe UI", "Lucida Grande", "Lucida Sans Unicode", system-ui,
-          sans-serif;
-      }
-
-      body {
-        background-image: url("/ios-4-2560-x-1600-da9g5d4mwg1dunim.jpg");
-        background-size: cover;
-        background-position: top center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 1.5rem 1rem 5rem;
-        gap: 1rem;
-        min-height: 100%;
-      }
-
-      /* ── Window shell ────────────────────────────── */
-      .window {
-        width: 100%;
-        border-radius: 0.5rem;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow:
-          0 8px 32px rgba(0, 0, 0, 0.18),
-          inset 0 1px 0 rgba(255, 255, 255, 0.5),
-          inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-        position: relative;
-        animation: fadeInDown 0.4s ease both;
-      }
-
-      .window::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.8),
-          transparent
-        );
-        z-index: 1;
-      }
-
-      /* ── Window header ───────────────────────────── */
-      .window-header {
-        padding: 0.6rem 0.75rem;
-        background: linear-gradient(
-          180deg,
-          rgba(113, 136, 168, 0.97) 0%,
-          rgba(72, 99, 135, 0.97) 50%,
-          rgba(58, 83, 117, 0.97) 51%,
-          rgba(80, 108, 144, 0.97) 100%
-        );
-        border-bottom: 1px solid rgba(30, 50, 80, 0.6);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.45),
-          0 2px 8px rgba(0, 0, 0, 0.2);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        position: relative;
-      }
-
-      .window-header::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 50%;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
-        pointer-events: none;
-      }
-
-      .window-title {
-        font-size: 0.9375rem;
-        font-weight: 700;
-        text-shadow:
-          0 1px 0 rgba(255, 255, 255, 0.35),
-          0 -1px 0 rgba(0, 0, 0, 0.4);
-        letter-spacing: 0.01em;
-      }
-
-      /* ── Window content ──────────────────────────── */
-      .window-content {
-        padding: 0.9rem 1rem;
-        background: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        color: rgba(30, 30, 40, 0.95);
-        font-size: 0.85rem;
-        line-height: 1.55;
-      }
-
-      /* ── App icons grid ───────────────────────────── */
-      .app-icons {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.25rem 0.5rem;
-        animation: fadeIn 0.4s ease 0.15s both;
-      }
-
-      .app-icon {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-        color: #fff;
-        gap: 0;
-        transition: transform 0.2s ease;
-      }
-
-      .app-icon:active {
-        transform: scale(0.92);
-      }
-
-      /* Plain PNG icon */
-      .app-icon-img {
-        width: 3.5rem;
-        height: 3.5rem;
-        display: block;
-        filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.5));
-        transition: all 300ms ease;
-        user-select: none;
-      }
-
-      /* Composite: Blank.png + tint overlay + FA icon */
-      .app-icon-composite {
-        position: relative;
-        width: 3.5rem;
-        height: 3.5rem;
-        display: block;
-        filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.5));
-        transition: all 300ms ease;
-      }
-
-      .app-icon-composite .app-icon-img {
-        filter: none;
-      }
-
-      .app-icon-composite::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-color: var(--blank-tint, transparent);
-        background-image: var(--blank-gradient, none);
-        border-radius: 0.8rem;
-        mix-blend-mode: multiply;
-        pointer-events: none;
-      }
-
-      .app-icon-overlay {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: #ffffff;
-        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-        pointer-events: none;
-        z-index: 2;
-      }
-
-      /* Label pill */
-      .app-icon span {
-        margin-top: 0.4rem;
-        font-size: 0.7rem;
-        font-weight: 500;
-        text-align: center;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: #fff;
-        letter-spacing: 0.01em;
-        background: rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-        padding: 0.1rem 0.35rem;
-        border-radius: 0.3rem;
-      }
-
-      /* ── Taskbar ─────────────────────────────────── */
-      .taskbar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 0.45rem 1rem;
-        background: rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.7rem;
-        text-align: center;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      /* ── Animations ──────────────────────────────── */
-      @keyframes fadeInDown {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-        }
-        to {
-          opacity: 1;
-        }
-      }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/mobile.css" />
   </head>
 
-  <body>
+  <body class="stage">
     <!-- About Me window -->
-    <div class="window">
+    <div class="window glass">
       <div class="window-header">
         <span class="window-title">About Me</span>
       </div>
@@ -272,78 +38,51 @@
         href="https://www.linkedin.com/in/elan-rubin/"
         class="app-icon"
         target="_blank"
+        ><div class="app-icon__tile glass">
+          <i class="fa-brands fa-linkedin"></i>
+        </div>
+        <span>LinkedIn</span></a
       >
-        <div
-          class="app-icon-composite"
-          style="--blank-tint: rgba(10, 102, 194, 0.6)"
-        >
-          <img src="/images/ios4 Icons/Blank.png" alt="" class="app-icon-img" />
-          <i class="fab fa-linkedin app-icon-overlay"></i>
-        </div>
-        <span>LinkedIn</span>
-      </a>
 
-      <a href="https://github.com/Elan-Rubin" class="app-icon" target="_blank">
-        <div
-          class="app-icon-composite"
-          style="--blank-tint: rgba(30, 30, 30, 0.65)"
-        >
-          <img src="/images/ios4 Icons/Blank.png" alt="" class="app-icon-img" />
-          <i class="fab fa-github app-icon-overlay"></i>
+      <a href="https://github.com/Elan-Rubin" class="app-icon" target="_blank"
+        ><div class="app-icon__tile glass">
+          <i class="fa-brands fa-github"></i>
         </div>
-        <span>GitHub</span>
-      </a>
-
-      <a class="app-icon">
-        <img
-          src="/images/ios4 Icons/Mail.png"
-          alt="Email"
-          class="app-icon-img"
-        />
-        <span>Email</span>
-      </a>
-      <a
-        href="https://elanmakesgames.itch.io/"
-        class="app-icon"
-        target="_blank"
+        <span>GitHub</span></a
       >
-        <div
-          class="app-icon-composite"
-          style="--blank-tint: rgba(250, 92, 92, 0.6)"
-        >
-          <img src="/images/ios4 Icons/Blank.png" alt="" class="app-icon-img" />
-          <i class="fa-brands fa-itch-io app-icon-overlay"></i>
+
+      <a class="app-icon"
+        ><div class="app-icon__tile glass">
+          <i class="fa-solid fa-envelope"></i>
         </div>
-        <span>itch.io</span>
-      </a>
+        <span>Email</span></a
+      >
+      <a href="https://elanmakesgames.itch.io/" class="app-icon" target="_blank"
+        ><div class="app-icon__tile glass">
+          <i class="fa-brands fa-itch-io"></i>
+        </div>
+        <span>itch.io</span></a
+      >
 
       <a
         href="https://www.etsy.com/shop/Legoco"
         class="app-icon"
         target="_blank"
-      >
-        <div
-          class="app-icon-composite"
-          style="--blank-tint: rgba(241, 101, 33, 0.6)"
-        >
-          <img src="/images/ios4 Icons/Blank.png" alt="" class="app-icon-img" />
-          <i class="fab fa-etsy app-icon-overlay"></i>
+        ><div class="app-icon__tile glass">
+          <i class="fa-brands fa-etsy"></i>
         </div>
-        <span>Etsy</span>
-      </a>
+        <span>Etsy</span></a
+      >
 
       <a
         href="https://www.instagram.com/elan_rubin/"
         class="app-icon"
         target="_blank"
+        ><div class="app-icon__tile glass">
+          <i class="fa-brands fa-instagram"></i>
+        </div>
+        <span>Instagram</span></a
       >
-        <img
-          src="/images/ios4 Icons/instagram.png"
-          alt=""
-          class="app-icon-img"
-        />
-        <span>Instagram</span>
-      </a>
     </div>
 
     <!-- Taskbar -->

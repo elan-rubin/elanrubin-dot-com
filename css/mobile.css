@@ -1,0 +1,70 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding: 1.5rem 1rem 5rem;
+}
+
+.window {
+  width: 100%;
+  max-width: 26rem;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+.window-header {
+  padding: 0.6rem 0.75rem;
+  border-bottom: var(--stroke) solid var(--line);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.window-content {
+  padding: 1rem;
+  color: var(--text-dim);
+}
+
+.app-icons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem 1rem;
+  width: 100%;
+  max-width: 26rem;
+}
+
+.app-icon {
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.app-icon__tile {
+  width: 4rem;
+  height: 4rem;
+  font-size: 1.6rem;
+  color: var(--text);
+}
+
+.app-icon span {
+  font-size: var(--text-xs);
+}
+
+.taskbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0.75rem;
+  border-top: var(--stroke) solid var(--line);
+  background: rgb(0 0 0 / 0.55);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--text-muted);
+}
