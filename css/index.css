@@ -65,12 +65,6 @@ html {
   width: 20rem;
 }
 
-.slideshow-content {
-  width: 20rem;
-  height: 20rem;
-  padding: 0 !important;
-}
-
 .window-header {
   padding: 0.75rem;
   cursor:
@@ -313,86 +307,6 @@ html {
   background-size: cover;
   background-position: top center;
   align-items: center;
-}
-
-/* Container for the slider */
-.slider-wrapper {
-  position: relative;
-  /* Position relative to allow positioning of child elements */
-  /* width: 80%; */
-  /* Set a fixed width of 80% of the container's width */
-  max-width: 800px;
-  /* Maximum width for larger screens */
-  margin: 0 auto;
-  /* Center the slider horizontally */
-  overflow: hidden;
-  /* Hide any overflowing content */
-  padding: 0;
-  /* Remove padding */
-  box-sizing: border-box;
-  /* Include padding and border in the element's total width and height */
-}
-
-/* Slider container */
-.slider {
-  display: flex;
-  width: 100%;
-  height: 100%; /* Fill full height */
-  transition: transform 1s ease;
-}
-
-.slider img {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%; /* Fill full height */
-  object-fit: cover; /* Change from contain to cover */
-  margin: 0; /* Remove any margins */
-  display: block; /* Remove any default image spacing */
-}
-
-/* Navigation dots container */
-.slider-nav {
-  display: flex;
-  /* Align dots horizontally */
-  column-gap: 0.5rem;
-  /* Space between dots */
-  position: absolute;
-  /* Position absolutely relative to the slider-wrapper */
-  bottom: 1rem;
-  /* Distance from the bottom of the slider-wrapper */
-  left: 50%;
-  /* Center horizontally */
-  transform: translateX(-50%);
-  /* Center the dots container */
-  z-index: 1;
-  /* Ensure navigation dots are above other content */
-  display: none;
-}
-
-/* Styling for each navigation dot */
-.slider-nav a {
-  width: 1rem;
-  /* Size of each dot */
-  height: 1rem;
-  /* border-radius: 50%; */
-  /* Make dots circular */
-  /* background-color: #fff; */
-  color: white;
-  /* White color for dots */
-  opacity: 0.75;
-  /* Slightly transparent dots */
-  transition: opacity ease 250ms;
-  /* Smooth transition for opacity changes */
-}
-
-/* Hover effect for navigation dots */
-.slider-nav a:hover {
-  opacity: 1;
-  cursor:
-    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23FFF" stroke="%23000" stroke-width="2" stroke-linejoin="round" d="M10 11V8.99c0-.88.59-1.64 1.44-1.86h.05A1.99 1.99 0 0 1 14 9.05V12v-2c0-.88.6-1.65 1.46-1.87h.05A1.98 1.98 0 0 1 18 10.06V13v-1.94a2 2 0 0 1 1.51-1.94h0A2 2 0 0 1 22 11.06V14c0 .6-.08 1.27-.21 1.97a7.96 7.96 0 0 1-7.55 6.48 54.98 54.98 0 0 1-4.48 0 7.96 7.96 0 0 1-7.55-6.48C2.08 15.27 2 14.59 2 14v-1.49c0-1.11.9-2.01 2.01-2.01h0a2 2 0 0 1 2.01 2.03l-.01.97v-10c0-1.1.9-2 2-2h0a2 2 0 0 1 2 2V11Z"></path></svg>')
-      12 6,
-    auto;
-  /* Fully opaque on hover */
 }
 
 /* style for app icons  */
