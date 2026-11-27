@@ -1540,8 +1540,7 @@
   content: none;
 }
 
-.pane--black,
-.pane--green {
+.pane--black {
   position: relative;
   border: var(--stroke) solid var(--line-strong);
   box-shadow: var(--shadow);
@@ -1549,18 +1548,6 @@
 
 .pane--black {
   background: oklch(0.1 0.004 var(--hue));
-  color: var(--text);
-}
-
-.pane--green {
-  --text: oklch(0.15 0.03 var(--hue));
-  --text-dim: oklch(0.28 0.04 var(--hue));
-  --text-muted: oklch(0.38 0.05 var(--hue));
-  --line: rgb(0 0 0 / 0.14);
-  --line-strong: rgb(0 0 0 / 0.4);
-  --accent: oklch(0.15 0.03 var(--hue));
-  --on-accent: oklch(0.85 0.17 var(--hue));
-  background: var(--accent-bg, oklch(0.78 0.19 var(--hue)));
   color: var(--text);
 }
 
@@ -1629,13 +1616,51 @@
   transform: none;
 }
 
-[data-pane="green"] {
-  --text: oklch(0.15 0.03 var(--hue));
-  --text-dim: oklch(0.28 0.04 var(--hue));
-  --text-muted: oklch(0.38 0.05 var(--hue));
-  --line: rgb(0 0 0 / 0.14);
-  --line-strong: rgb(0 0 0 / 0.4);
-  --accent: oklch(0.15 0.03 var(--hue));
-  --on-accent: oklch(0.85 0.17 var(--hue));
-  color: var(--text);
+.accent-bar {
+  display: inline-block;
+  width: 2.25rem;
+  height: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.accent-rule {
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0 3rem, var(--line) 3rem);
+}
+
+.ticks {
+  display: inline-block;
+  width: 1.4rem;
+  height: 0.5rem;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0 2px,
+    transparent 2px 6px
+  );
+}
+
+.bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 1rem;
+}
+
+.bars i {
+  width: 3px;
+  background: var(--accent);
+}
+
+.bars i:nth-child(1) {
+  height: 40%;
+}
+.bars i:nth-child(2) {
+  height: 75%;
+}
+.bars i:nth-child(3) {
+  height: 55%;
+}
+.bars i:nth-child(4) {
+  height: 100%;
 }

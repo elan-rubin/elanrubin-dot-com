@@ -85,3 +85,14 @@ body {
   top: -0.3rem;
   left: calc(50% + var(--tile) / 2 - 0.65rem);
 }
+
+.window-title::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}

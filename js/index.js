@@ -16,7 +16,15 @@ function dragElement(elmnt) {
     grabY = e.clientY - elmnt.offsetTop;
     header.setPointerCapture(e.pointerId);
     elmnt.style.zIndex = ++zIndex;
+    elmnt.dataset.dragging = "";
   });
+
+  const release = () => {
+    delete elmnt.dataset.dragging;
+  };
+  header.addEventListener("pointerup", release);
+  header.addEventListener("pointercancel", release);
+  header.addEventListener("lostpointercapture", release);
 
   header.addEventListener("pointermove", (e) => {
     if (!header.hasPointerCapture(e.pointerId)) return;
@@ -67,6 +75,14 @@ document.addEventListener("DOMContentLoaded", function () {
     dragElement(windows[i]);
     setupWindowControls(windows[i]);
     windows[i].style.zIndex = ++zIndex;
+    const raise = windows[i];
+    raise.addEventListener(
+      "pointerdown",
+      () => {
+        raise.style.zIndex = ++zIndex;
+      },
+      true,
+    );
   }
 
   const notepadContent = document.getElementById("notepadContent");
