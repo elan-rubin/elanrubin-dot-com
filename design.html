@@ -8,11 +8,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&family=Space+Grotesk:wght@300..700&family=Space+Mono:wght@400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Doto:wght@400..900&family=Geist:wght@300..700&family=Geist+Mono:wght@400..700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/tokens.css" />
     <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/slideshow.css" />
   </head>
   <body>
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
@@ -110,7 +111,7 @@
           <h3 class="label">Type</h3>
           <div class="display display-xl">Aa 0123</div>
           <div class="display display-lg">Dot matrix display</div>
-          <div class="h1">Space Grotesk heading one</div>
+          <div class="h1">Geist heading one</div>
           <div class="h2">Heading two</div>
           <div class="h3">Heading three</div>
           <p class="lead">Lead paragraph for introductions.</p>
@@ -349,6 +350,26 @@
             <h3 class="h3">Media card</h3>
             <p class="body">Cover, tag, title, text.</p>
           </article>
+          <article class="card">
+            <span class="label">accents</span>
+            <h3 class="h3">Bars and lines</h3>
+            <div class="row" style="--gap: var(--s-4)">
+              <span class="accent-bar"></span>
+              <span class="ticks"></span>
+              <span class="bars"><i></i><i></i><i></i><i></i></span>
+            </div>
+            <div class="accent-rule"></div>
+          </article>
+          <article class="card pane--black">
+            <span class="label label--accent">black pane</span>
+            <h3 class="h3">Solid black</h3>
+            <p class="body">Opaque dark, no blur.</p>
+          </article>
+          <article class="card card--block">
+            <span class="label label--accent">block card</span>
+            <h3 class="h3">Thick outline</h3>
+            <p class="body">Hard offset shadow, for things that should hit.</p>
+          </article>
           <article class="card glass">
             <span class="label">glass card</span>
             <h3 class="h3">Floats over anything</h3>
@@ -443,6 +464,11 @@
 
         <pre class="code"><b>const</b> signal = <b>"green"</b>;
 console.log(signal);</pre>
+
+        <div class="stack">
+          <h3 class="label">Capsule slideshow</h3>
+          <div style="max-width: 30rem"><div data-slideshow></div></div>
+        </div>
 
         <div class="gallery">
           <div class="frame" data-label="frame 01"></div>
@@ -566,7 +592,10 @@ console.log(signal);</pre>
     <footer class="footer">
       <div class="container row" style="justify-content: space-between">
         <span>Design system 0.2</span>
-        <span class="mono">black glass / green signal</span>
+        <span class="mono"
+          ><a class="link" href="/design/canon.html">design canon</a> / black
+          glass / green signal</span
+        >
       </div>
     </footer>
 
@@ -584,5 +613,6 @@ console.log(signal);</pre>
 
     <div class="toasts"></div>
     <script src="/js/components.js"></script>
+    <script src="/js/slideshow.js"></script>
   </body>
 </html>

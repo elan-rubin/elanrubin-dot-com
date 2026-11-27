@@ -2,56 +2,58 @@
 
 let zIndex = 1;
 
+function focusWindow(win) {
+  const previous = document.querySelector(".window[data-top]");
+  win.style.zIndex = ++zIndex;
+  document.querySelectorAll(".window[data-top]").forEach((other) => {
+    delete other.dataset.top;
+  });
+  win.dataset.top = "";
+  return previous !== win;
+}
+
 function dragElement(elmnt) {
-  var pos1 = 0,
-    pos2 = 0,
-    pos3 = 0,
-    pos4 = 0;
-  elmnt
-    .querySelector(".window-header")
-    .addEventListener("mousedown", dragMouseDown);
-  elmnt
-    .querySelector(".window-header")
-    .addEventListener("touchstart", dragMouseDown);
+  const header = elmnt.querySelector(".window-header");
+  let grabX = 0;
+  let grabY = 0;
+  let moved = false;
 
-  function dragMouseDown(e) {
+  header.style.touchAction = "none";
+
+  header.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".window-button")) return;
     e.preventDefault();
-    pos3 = e.clientX || e.touches[0].clientX;
-    pos4 = e.clientY || e.touches[0].clientY;
-    document.addEventListener("mouseup", closeDragElement);
-    document.addEventListener("touchend", closeDragElement);
-    document.addEventListener("mousemove", elementDrag);
-    document.addEventListener("touchmove", elementDrag);
+    grabX = e.clientX - elmnt.offsetLeft;
+    grabY = e.clientY - elmnt.offsetTop;
+    header.setPointerCapture(e.pointerId);
+    focusWindow(elmnt);
+    elmnt.dataset.dragging = "";
+    moved = false;
+  });
 
-    elmnt.style.zIndex = ++zIndex;
-  }
+  const release = () => {
+    if (elmnt.dataset.dragging === undefined) return;
+    delete elmnt.dataset.dragging;
+    if (moved) {
+      emit("move", {
+        name: elmnt.querySelector(".window-title").textContent.trim(),
+        x: Math.round(elmnt.offsetLeft),
+        y: Math.round(elmnt.offsetTop),
+      });
+    }
+  };
+  header.addEventListener("pointerup", release);
+  header.addEventListener("pointercancel", release);
+  header.addEventListener("lostpointercapture", release);
 
-  function elementDrag(e) {
-    e.preventDefault();
-    pos1 = pos3 - (e.clientX || e.touches[0].clientX);
-    pos2 = pos4 - (e.clientY || e.touches[0].clientY);
-    pos3 = e.clientX || e.touches[0].clientX;
-    pos4 = e.clientY || e.touches[0].clientY;
-
-    var newTop = elmnt.offsetTop - pos2;
-    var newLeft = elmnt.offsetLeft - pos1;
-
-    var maxX = window.innerWidth - elmnt.offsetWidth;
-    var maxY = window.innerHeight - elmnt.offsetHeight;
-
-    newTop = Math.max(0, Math.min(newTop, maxY));
-    newLeft = Math.max(0, Math.min(newLeft, maxX));
-
-    elmnt.style.top = newTop + "px";
-    elmnt.style.left = newLeft + "px";
-  }
-
-  function closeDragElement() {
-    document.removeEventListener("mouseup", closeDragElement);
-    document.removeEventListener("touchend", closeDragElement);
-    document.removeEventListener("mousemove", elementDrag);
-    document.removeEventListener("touchmove", elementDrag);
-  }
+  header.addEventListener("pointermove", (e) => {
+    if (!header.hasPointerCapture(e.pointerId)) return;
+    moved = true;
+    const maxX = window.innerWidth - elmnt.offsetWidth;
+    const maxY = window.innerHeight - elmnt.offsetHeight;
+    elmnt.style.left = Math.max(0, Math.min(e.clientX - grabX, maxX)) + "px";
+    elmnt.style.top = Math.max(0, Math.min(e.clientY - grabY, maxY)) + "px";
+  });
 }
 
 // function setupWindowControls(window) {
@@ -94,128 +96,129 @@ document.addEventListener("DOMContentLoaded", function () {
     dragElement(windows[i]);
     setupWindowControls(windows[i]);
     windows[i].style.zIndex = ++zIndex;
+    const raise = windows[i];
+    raise.addEventListener(
+      "pointerdown",
+      () => {
+        if (focusWindow(raise)) {
+          emit("window", {
+            name: raise.querySelector(".window-title").textContent.trim(),
+            action: "focus",
+          });
+        }
+      },
+      true,
+    );
   }
 
   const notepadContent = document.getElementById("notepadContent");
   const notepadText =
-    "Hello!\nMy name is Elan Rubin, and I'm a computer science student at university.\nMy interests lie in the intersection between technology and art.";
+    "Hello!\nMy name is Elan, and I'm a student.\nMy interests lie in the intersection between technology and art.";
   animateTyping(notepadContent, notepadText, 25);
 });
 
+const CALC_MAX = 18;
+
+function calcDisplay() {
+  return document.getElementById("display");
+}
+
+function evaluateExpression(text) {
+  const clean = text.replace(/\s/g, "");
+  const tokens = clean.match(/\d+\.?\d*|\.\d+|[-+*/()]/g);
+  if (!tokens || tokens.join("") !== clean) throw new Error("bad input");
+  let i = 0;
+  const peek = () => tokens[i];
+  const next = () => tokens[i++];
+  const expr = () => {
+    let value = term();
+    while (peek() === "+" || peek() === "-") {
+      const op = next();
+      const rhs = term();
+      value = op === "+" ? value + rhs : value - rhs;
+    }
+    return value;
+  };
+  const term = () => {
+    let value = factor();
+    while (peek() === "*" || peek() === "/") {
+      const op = next();
+      const rhs = factor();
+      value = op === "*" ? value * rhs : value / rhs;
+    }
+    return value;
+  };
+  const factor = () => {
+    const token = next();
+    if (token === "-") return -factor();
+    if (token === "+") return factor();
+    if (token === "(") {
+      const value = expr();
+      if (next() !== ")") throw new Error("unclosed");
+      return value;
+    }
+    const number = Number(token);
+    if (token === undefined || Number.isNaN(number))
+      throw new Error("bad input");
+    return number;
+  };
+  const result = expr();
+  if (i !== tokens.length || !Number.isFinite(result))
+    throw new Error("bad input");
+  return result;
+}
+
 function appendToDisplay(value) {
-  document.getElementById("display").value += value;
+  const display = calcDisplay();
+  const state = display.dataset.state;
+  if (state === "error" || (state === "done" && /[\d.(]/.test(value))) {
+    display.value = "";
+  }
+  delete display.dataset.state;
+  if (display.value.length >= CALC_MAX) return;
+  display.value += value;
+}
+
+function backspaceDisplay() {
+  const display = calcDisplay();
+  if (display.dataset.state === "error") display.value = "";
+  delete display.dataset.state;
+  display.value = display.value.slice(0, -1);
 }
 
 function clearDisplay() {
-  document.getElementById("display").value = "";
+  const display = calcDisplay();
+  display.value = "";
+  delete display.dataset.state;
 }
 
 function calculate() {
-  const display = document.getElementById("display");
-  display.value = "I ❤ elanrubin.com";
-  display.classList.add("flash");
-
-  let flashCount = 0;
-  const flashInterval = setInterval(() => {
-    flashCount++;
-    if (flashCount >= 1) {
-      clearInterval(flashInterval);
-      display.classList.remove("flash");
-      setTimeout(clearDisplay, 500);
-    }
-  }, 1000);
+  const display = calcDisplay();
+  if (!display.value) return;
+  try {
+    const result = evaluateExpression(display.value);
+    const expr = display.value;
+    display.value = String(Number(result.toPrecision(12)));
+    display.dataset.state = "done";
+    emit("calc", { expr, result: display.value });
+  } catch {
+    emit("calc", { expr: display.value, error: true });
+    display.value = "ERR";
+    display.dataset.state = "error";
+  }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const slider = document.querySelector(".slider"); // Select the slider container
-  const slides = document.querySelectorAll(".slider img"); // Select all slides (images)
-  const slideCount = slides.length; // Number of slides
-  const interval = 2000; // Time for each slide transition in milliseconds (3 seconds)
-
-  let currentIndex = 0; // Index of the current slide
-  let startX = 0; // Starting x coordinate for touch
-  let endX = 0; // Ending x coordinate for touch
-
-  function goToSlide(index) {
-    const offset = slides[0].clientWidth * index; // Calculate the offset based on slide width
-    slider.style.transform = `translateX(-${offset}px)`; // Apply the translation to show the correct slide
-    currentIndex = index; // Update the current slide index
-  }
-
-  function nextSlide() {
-    currentIndex = (currentIndex + 1) % slideCount; // Move to the next slide, wrap around if needed
-    goToSlide(currentIndex); // Show the next slide
-  }
-
-  function previousSlide() {
-    currentIndex = (currentIndex - 1 + slideCount) % slideCount; // Move to the previous slide, wrap around if needed
-    goToSlide(currentIndex); // Show the previous slide
-  }
-
-  // Automatically transition to the next slide every few seconds
-  setInterval(nextSlide, interval);
-
-  // Optional: Add click event listeners for navigation dots
-  const navLinks = document.querySelectorAll(".slider-nav a"); // Select all navigation dots
-  navLinks.forEach((link, index) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault(); // Prevent the default anchor behavior
-      goToSlide(index); // Show the slide corresponding to the clicked dot
-    });
-  });
-
-  // Swipe handling
-  slider.addEventListener("touchstart", function (event) {
-    startX = event.touches[0].clientX; // Store the starting x coordinate
-  });
-
-  slider.addEventListener("touchend", function (event) {
-    endX = event.changedTouches[0].clientX; // Store the ending x coordinate
-    const diffX = endX - startX; // Calculate the difference
-    if (Math.abs(diffX) > 50) {
-      // If the swipe is significant
-      if (diffX > 0) {
-        previousSlide(); // Swipe right, go to the previous slide
-      } else {
-        nextSlide(); // Swipe left, go to the next slide
-      }
-    }
-  });
-});
-
-//app icon code
-
-document.addEventListener("DOMContentLoaded", function () {
-  const appIcons = document.querySelectorAll(".app-icon");
-  appIcons.forEach((icon) => {
-    icon.addEventListener("click", function (e) {
-      const url = this.getAttribute("href");
-      // Only handle if there's an href attribute (skip desktop icons)
-      if (url && url !== "#") {
-        e.preventDefault();
-
-        // Get the name of the link from the span text
-        const linkName = this.querySelector("span")?.textContent.toLowerCase();
-
-        window.open(url, "_blank");
-        if (linkName) {
-          addTerminalCommand(`visit ${linkName}`);
-        }
-      }
-    });
-  });
-
-  // Handle resume link - open Resume window
-  const resumeLink = document.querySelector(".resume-link");
-  if (resumeLink) {
-    resumeLink.addEventListener("click", function (e) {
-      e.preventDefault();
-      // Toggle the Resume window (will load PDF on first open)
-      if (!windowStates["Resume"]) {
-        toggleWindow("Resume");
-      }
-    });
-  }
+document.addEventListener("keydown", (event) => {
+  const calc = document.querySelector(".window[data-top] .calculator");
+  if (!calc || calc.closest(".window").style.display === "none") return;
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const key = event.key;
+  if (/^[\d.+\-*/()]$/.test(key)) appendToDisplay(key);
+  else if (key === "Enter" || key === "=") calculate();
+  else if (key === "Backspace") backspaceDisplay();
+  else if (key === "Escape" || key.toLowerCase() === "c") clearDisplay();
+  else return;
+  event.preventDefault();
 });
 
 //update the time and volume
@@ -244,80 +247,38 @@ let windowStates = {
   Notepad: true,
   Playlist: true,
   Clicker: false,
-  Resume: false,
 };
 
-// Load the resume PDF into the object viewer
-async function loadResumePDF() {
-  const resumeViewer = document.getElementById("resumeViewer");
-  const downloadLink = document.getElementById("resumeDownloadLink");
-  if (!resumeViewer || resumeViewer.data) return; // Already loaded
-
-  try {
-    // Fetch the directory listing as HTML
-    const response = await fetch("pdf/resume/");
-    const html = await response.text();
-
-    // Parse HTML to find PDF files
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const links = doc.querySelectorAll("a");
-
-    // Find first PDF file
-    let pdfPath = null;
-    for (const link of links) {
-      const href = link.getAttribute("href");
-      if (href && href.toLowerCase().endsWith(".pdf")) {
-        pdfPath = href;
-        break;
-      }
-    }
-
-    if (pdfPath) {
-      // Decode the URL-encoded path and extract just the filename
-      const decodedPath = decodeURIComponent(pdfPath);
-      // Get the filename from the path (handles both / and \ separators)
-      const filename = decodedPath.split(/[/\\]/).pop();
-      const resumePath = `pdf/resume/${filename}`;
-
-      // Set the object data attribute to load the PDF
-      resumeViewer.data = resumePath;
-
-      // Set the download link href
-      if (downloadLink) {
-        downloadLink.href = resumePath;
-        downloadLink.download = filename;
-      }
-    } else {
-      console.error("No PDF found in resume folder");
-    }
-  } catch (error) {
-    console.error("Error loading resume:", error);
-  }
+function emit(type, detail) {
+  document.dispatchEvent(new CustomEvent(`site:${type}`, { detail }));
 }
 
-async function toggleWindow(windowName) {
+function syncLaunchers() {
+  document.querySelectorAll("[data-launch]").forEach((button) => {
+    button.classList.toggle(
+      "is-open",
+      Boolean(windowStates[button.dataset.launch]),
+    );
+  });
+}
+
+async function toggleWindow(windowName, silent = false) {
   const windowElement = findWindowByTitle(windowName);
   if (windowElement) {
     windowStates[windowName] = !windowStates[windowName];
     if (windowStates[windowName]) {
       windowElement.style.display = "block";
       windowElement.style.animation = "openWindow 0.3s";
-      windowElement.style.zIndex = ++zIndex; // Bring to front
-      addTerminalCommand(`launch ${windowName.toLowerCase()}.exe`);
-
-      // Load PDF if this is the Resume window
-      if (windowName === "Resume") {
-        await loadResumePDF();
-      }
+      focusWindow(windowElement);
+      emit("window", { name: windowName, action: "open", silent });
     } else {
       windowElement.style.animation = "closeWindow 0.3s";
       setTimeout(() => {
         windowElement.style.display = "none";
       }, 280);
-      addTerminalCommand(`kill ${windowName.toLowerCase()}.exe`);
+      emit("window", { name: windowName, action: "close", silent });
     }
-    updateTerminalList();
+    syncLaunchers();
   }
 }
 
@@ -332,7 +293,6 @@ function findWindowByTitle(title) {
   return null;
 }
 
-// Update window controls to include visibility toggle
 function setupWindowControls(window) {
   const closeBtn = window.querySelector(".close-btn");
   const windowTitle = window.querySelector(".window-title").textContent.trim();
@@ -346,110 +306,34 @@ function setupWindowControls(window) {
   });
 }
 
-function updateTerminalList() {
-  const terminalList = document.querySelector(".terminal-list");
-  if (!terminalList) return;
-
-  terminalList.innerHTML = Object.keys(windowStates)
-    .map(
-      (name) => `
-        <li class="terminal-item">
-            <span class="status-dot ${
-              windowStates[name] ? "active" : ""
-            }"></span>
-            ${name}
-        </li>
-    `,
-    )
-    .join("");
-
-  // Reattach click handlers
-  const items = terminalList.querySelectorAll(".terminal-item");
-  items.forEach((item) => {
-    item.addEventListener("click", () => {
-      const windowName = item.textContent.trim();
-      toggleWindow(windowName);
-    });
-  });
-}
-
-// Terminal command display with typing animation
-function addTerminalCommand(command) {
-  const terminalCommands = document.getElementById("terminalCommands");
-  if (!terminalCommands) return;
-
-  // Get the current active line (the last one with just the prompt)
-  const currentLine = terminalCommands.lastChild;
-  const promptText = "C:\\Users\\Elan> ";
-
-  // Typing animation
-  let i = 0;
-  function typeChar() {
-    if (i < command.length) {
-      currentLine.textContent = promptText + command.substring(0, i + 1);
-      i++;
-      setTimeout(typeChar, 30);
-    } else {
-      // After typing is complete, add a new empty prompt line
-      const newCommandLine = document.createElement("div");
-      newCommandLine.className = "terminal-line";
-      newCommandLine.textContent = promptText;
-      terminalCommands.appendChild(newCommandLine);
-
-      // Keep only last 4 lines (3 completed + 1 empty prompt)
-      const allChildren = Array.from(terminalCommands.children);
-      if (allChildren.length > 4) {
-        terminalCommands.removeChild(allChildren[0]);
-      }
-
-      // Auto-scroll to bottom
-      terminalCommands.scrollTop = terminalCommands.scrollHeight;
+document.addEventListener("site:launch", (event) => {
+  const { name, action, silent } = event.detail;
+  const win = findWindowByTitle(name);
+  if (!win) return;
+  const open = windowStates[name];
+  if (action === "open" || action === "launch") {
+    if (!open) toggleWindow(name, silent);
+    else {
+      focusWindow(win);
+      if (!silent) emit("window", { name, action: "focus" });
     }
+  } else if (action === "close") {
+    if (open) toggleWindow(name, silent);
+  } else if (action === "focus") {
+    if (open) focusWindow(win);
+  } else if (action === "toggle") {
+    toggleWindow(name, silent);
   }
-  typeChar();
-}
+});
 
-// Initialize terminal when DOM is loaded
-// document.addEventListener('DOMContentLoaded', function() {
-//     createTerminal();
-// });
+document.addEventListener("click", (event) => {
+  const launcher = event.target.closest(".task-launch");
+  if (launcher) toggleWindow(launcher.dataset.launch);
+});
 
-// Update time every second
 setInterval(updateTime, 1000);
 
-// Initial time update
 document.addEventListener("DOMContentLoaded", function () {
   updateTime();
-  updateTerminalList();
-
-  // Initialize terminal with welcome message and first prompt
-  const terminalCommands = document.getElementById("terminalCommands");
-  if (terminalCommands) {
-    // Add welcome message
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const timeString = `${hours}:${minutes}:${now.getSeconds().toString().padStart(2, "0")}`;
-
-    const welcomeLine = document.createElement("div");
-    welcomeLine.className = "terminal-line";
-    welcomeLine.textContent = `connected at ${timeString}`;
-    terminalCommands.appendChild(welcomeLine);
-
-    // Add first empty prompt
-    const commandLine = document.createElement("div");
-    commandLine.className = "terminal-line";
-    commandLine.textContent = "C:\\Users\\Elan> ";
-    terminalCommands.appendChild(commandLine);
-  }
-
-  // Setup desktop icon click handlers
-  const desktopIcons = document.querySelectorAll(".desktop-icon");
-  desktopIcons.forEach((icon) => {
-    icon.addEventListener("click", function () {
-      const windowName = this.getAttribute("data-window");
-      toggleWindow(windowName);
-    });
-  });
+  syncLaunchers();
 });
-//sometiemes this doesnt work

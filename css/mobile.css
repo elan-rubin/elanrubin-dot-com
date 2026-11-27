@@ -1,0 +1,62 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding: 1.5rem 1rem 5rem;
+}
+
+.window {
+  width: 100%;
+  max-width: 26rem;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+.window-header {
+  padding: 0.6rem 0.75rem;
+  border-bottom: var(--stroke) solid var(--line);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.window-content {
+  padding: 1rem;
+  color: var(--text-dim);
+}
+
+.taskbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0.75rem;
+  border-top: var(--stroke) solid var(--line);
+  background: rgb(0 0 0 / 0.55);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.window-title::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 10px;
+  vertical-align: -1px;
+  background-image: radial-gradient(
+    circle,
+    var(--accent) 1.3px,
+    transparent 1.7px
+  );
+  background-size: 4px 4px;
+  filter: drop-shadow(0 0 4px var(--accent-glow));
+}

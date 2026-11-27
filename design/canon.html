@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Design canon</title>
+    <link rel="icon" type="image/x-icon" href="/images/star_favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Doto:wght@400..900&family=Geist:wght@300..700&family=Geist+Mono:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <style>
+      .plates {
+        display: grid;
+        gap: var(--s-7);
+      }
+      .plate {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--s-6);
+        align-items: start;
+      }
+      .plate:nth-child(even) .plate__art {
+        order: 2;
+      }
+      .plate__art {
+        margin: 0;
+        border: var(--stroke) solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--bg-raised);
+        overflow: hidden;
+      }
+      .plate__art img {
+        width: 100%;
+        height: auto;
+      }
+      .plate__art--invert {
+        padding: var(--s-4);
+        background: #000;
+      }
+      .plate__missing {
+        display: grid;
+        place-content: center;
+        min-height: 16rem;
+        padding: var(--s-5);
+        text-align: center;
+        color: var(--text-muted);
+      }
+      .takes {
+        list-style: none;
+        display: grid;
+        gap: var(--s-3);
+      }
+      .takes li {
+        display: flex;
+        gap: var(--s-3);
+        color: var(--text-dim);
+      }
+      .takes li::before {
+        content: "";
+        flex: none;
+        width: 3px;
+        height: 1.1em;
+        margin-top: 0.2em;
+        background: var(--accent);
+      }
+      @media (max-width: 760px) {
+        .plate {
+          grid-template-columns: 1fr;
+        }
+        .plate:nth-child(even) .plate__art {
+          order: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <span class="label label--accent"
+          ><span class="dotsq"></span> Design canon</span
+        >
+        <h1 class="display display-xl">What we steal from.</h1>
+        <p class="lead">
+          The references the system is built on. Each plate says what we take
+          and where it already shows up. New references go at the end.
+        </p>
+        <a class="link" href="/design.html">Component library</a>
+      </header>
+
+      <section class="plates" aria-label="References">
+        <article class="plate">
+          <figure class="plate__art">
+            <img
+              src="canon/nothing-phone-back.png"
+              alt="Back of a black phone with modular panels, round lenses, a concentric disc and one red square"
+            />
+          </figure>
+          <div class="stack">
+            <span class="label">Plate 01 / Nothing / phone back</span>
+            <h2 class="h2">Modules on a hairline grid</h2>
+            <ul class="takes">
+              <li>
+                Rectangular panels butt together on thin seams. Our
+                <code class="mono">.modules</code> grid.
+              </li>
+              <li>
+                A concentric disc as the one round gesture. The ring circle on
+                the first stage, since retired from the desktop.
+              </li>
+              <li>
+                One tiny colour hit, a red square. Ours is green, and it stays a
+                bar, a tick or a dot, never a field.
+              </li>
+              <li>
+                A dot-matrix readout in a round window. The Doto accent font and
+                the dotted square marker.
+              </li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="plate">
+          <figure class="plate__art">
+            <img
+              src="canon/nothing-ear-case.png"
+              alt="A black case with two transparent earbuds, one with a white dot and one with a red dot"
+            />
+          </figure>
+          <div class="stack">
+            <span class="label">Plate 02 / Nothing / ear case</span>
+            <h2 class="h2">Glass over black internals</h2>
+            <ul class="takes">
+              <li>
+                See-through shells over dark machinery. The liquid glass windows
+                that refract the background.
+              </li>
+              <li>
+                Status lights as the only colour. The LEDs, the dnd dot and the
+                node glow.
+              </li>
+              <li>
+                Laser-etched micro type running down a part. The tracked mono
+                labels.
+              </li>
+              <li>
+                Mostly colourless, with the dark carrying the mood. Swatches of
+                colour stay off the page.
+              </li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="plate">
+          <figure class="plate__art plate__art--invert">
+            <img
+              src="canon/dither-forms-inverted.png"
+              alt="Ten halftone dotted star and flower forms, white dots on black"
+              onerror="
+                this.replaceWith(
+                  Object.assign(document.createElement('div'), {
+                    className: 'plate__missing label',
+                    textContent: 'add design/canon/dither-forms-inverted.png',
+                  }),
+                )
+              "
+            />
+          </figure>
+          <div class="stack">
+            <span class="label">Plate 03 / dither forms / inverted</span>
+            <h2 class="h2">Shading made of dots</h2>
+            <ul class="takes">
+              <li>
+                Volume drawn only with halftone dots. A way to make glyphs and
+                cover art that fits the dot grid.
+              </li>
+              <li>
+                Spiky stars, pinwheels and blobs as a vocabulary of accent
+                shapes, to use sparingly.
+              </li>
+              <li>
+                Shown inverted, white on black, so it sits on the dark pages
+                without a light box.
+              </li>
+            </ul>
+          </div>
+        </article>
+      </section>
+    </main>
+    <footer class="footer">
+      <div class="container row" style="justify-content: space-between">
+        <span>Design canon</span>
+        <span class="mono">3 plates</span>
+      </div>
+    </footer>
+  </body>
+</html>
