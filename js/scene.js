@@ -388,28 +388,26 @@ function start(root) {
     }
   });
 
-  const items = [...root.querySelectorAll(".window, .app-icon__tile")].map(
-    (el) => ({
-      el,
-      isWindow: el.classList.contains("window"),
-      mat: MATERIALS[(el.closest("[data-pane]") ?? el).dataset.pane] ?? 0,
-      tint: el.dataset.tint ? normalizeTint(el.dataset.tint) : null,
-      x: 0,
-      y: 0,
-      vx: 0,
-      vy: 0,
-      s: 1,
-      vs: 0,
-      alpha: 0,
-      shown: false,
-      dx: 0,
-      dy: 0,
-      sx: 1,
-      sy: 1,
-      mask: "",
-      box: null,
-    }),
-  );
+  const items = [...root.querySelectorAll(".window")].map((el) => ({
+    el,
+    isWindow: el.classList.contains("window"),
+    mat: MATERIALS[(el.closest("[data-pane]") ?? el).dataset.pane] ?? 0,
+    tint: el.dataset.tint ? normalizeTint(el.dataset.tint) : null,
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    s: 1,
+    vs: 0,
+    alpha: 0,
+    shown: false,
+    dx: 0,
+    dy: 0,
+    sx: 1,
+    sy: 1,
+    mask: "",
+    box: null,
+  }));
 
   items.forEach((item) => {
     if (item.tint) item.el.style.color = item.tint.ink;

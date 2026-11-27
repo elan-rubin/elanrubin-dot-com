@@ -1,0 +1,224 @@
+[data-slideshow] {
+  --slide-gap: 0.75rem;
+  position: relative;
+}
+
+.slide-viewport {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.slides {
+  display: flex;
+  gap: var(--slide-gap);
+  transition: transform 0.6s var(--ease);
+}
+
+.capsule {
+  position: relative;
+  display: block;
+  flex: 0 0 100%;
+  aspect-ratio: 1058 / 496;
+  overflow: hidden;
+  padding: 0;
+  border: var(--stroke) solid rgb(255 255 255 / 0.14);
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      135deg,
+      rgb(var(--tint)) 0%,
+      color-mix(in srgb, rgb(var(--tint)) 55%, rgb(var(--tint-deep))) 100%
+    ),
+    rgb(var(--tint));
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color var(--base),
+    filter var(--base);
+}
+
+.capsule:hover,
+.capsule:focus-visible {
+  border-color: rgb(255 255 255 / 0.34);
+}
+
+.capsule::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.16) 1px,
+    transparent 1.5px
+  );
+  background-size: 10px 10px;
+  -webkit-mask-image: linear-gradient(100deg, #000, transparent 65%);
+  mask-image: linear-gradient(100deg, #000, transparent 65%);
+  pointer-events: none;
+}
+
+.capsule::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.capsule__art {
+  position: absolute;
+  right: -1rem;
+  bottom: -2.6rem;
+  color: rgb(var(--tint-deep));
+  font-size: 12.5rem;
+  line-height: 1;
+  opacity: 0.92;
+  filter: blur(0.9px);
+  pointer-events: none;
+}
+
+.capsule__kind {
+  position: absolute;
+  top: 0.9rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-dot);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.66);
+}
+
+.capsule__copy {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  display: grid;
+  gap: 0.25rem;
+  max-width: 62%;
+}
+
+.capsule__title {
+  font-family: var(--font-headline);
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: rgb(255 255 255 / 0.95);
+  text-shadow: 0 1px 12px rgb(0 0 0 / 0.35);
+}
+
+.capsule:hover .capsule__title {
+  animation: fontswap 0.6s steps(1) forwards;
+}
+
+.capsule__meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  color: rgb(255 255 255 / 0.62);
+}
+
+.capsule__ticks {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 1.4rem;
+  height: 0.5rem;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--accent) 0 2px,
+    transparent 2px 6px
+  );
+  opacity: 0.9;
+}
+
+.capsule[aria-disabled="true"] {
+  cursor: not-allowed;
+  filter: saturate(0.6) brightness(0.8);
+}
+
+.capsule[aria-disabled="true"] .capsule__ticks {
+  display: none;
+}
+
+.capsule .dnd {
+  top: 0.9rem;
+  right: 1rem;
+}
+
+.slide-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.7rem;
+}
+
+.slide-arrow {
+  position: relative;
+  width: 2rem;
+  height: 1.6rem;
+  border: var(--stroke) solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color var(--fast),
+    box-shadow var(--fast),
+    transform var(--fast) var(--ease);
+}
+
+.slide-arrow::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-top: 2px solid var(--text-dim);
+  border-right: 2px solid var(--text-dim);
+  transform: translate(-70%, -50%) rotate(45deg);
+}
+
+.slide-arrow--prev::before {
+  transform: translate(-30%, -50%) rotate(-135deg);
+}
+
+.slide-arrow:hover {
+  border-color: var(--accent);
+  box-shadow: 2px 2px 0 var(--accent);
+  transform: translate(-1px, -1px);
+}
+
+.slide-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.slide-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  padding: 0;
+  border: 0;
+  border-radius: 1px;
+  background: var(--line-strong);
+  cursor: pointer;
+  transition:
+    width var(--base) var(--ease),
+    background var(--fast);
+}
+
+.slide-dot.is-on {
+  width: 1.3rem;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}

@@ -43,6 +43,7 @@
   --font-dot: "Doto", "Geist Mono", monospace;
   --font-block: "Blaec", "Geist Mono", monospace;
   --font-headline: "Geist", system-ui, sans-serif;
+  --icon: oklch(0.52 0.012 var(--hue));
   --dnd: oklch(0.78 0.19 25);
   --font-body: "Geist", system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;

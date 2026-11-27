@@ -17,6 +17,7 @@
     />
     <link rel="stylesheet" href="/css/tokens.css" />
     <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/slideshow.css" />
     <link rel="stylesheet" href="/css/mobile.css" />
   </head>
 
@@ -32,55 +33,11 @@
       </div>
     </div>
 
-    <!-- App icons -->
-    <div class="app-icons">
-      <a
-        href="https://www.linkedin.com/in/elan-rubin/"
-        class="app-icon"
-        target="_blank"
-        ><div class="app-icon__tile glass" data-tint="#0a66c2">
-          <i class="fa-brands fa-linkedin"></i><span>LinkedIn</span>
-        </div></a
-      >
-
-      <a href="https://github.com/Elan-Rubin" class="app-icon" target="_blank"
-        ><div class="app-icon__tile glass" data-tint="#1e1e1e">
-          <i class="fa-brands fa-github"></i><span>GitHub</span>
-        </div></a
-      >
-
-      <a
-        class="app-icon app-icon--disabled"
-        aria-disabled="true"
-        title="coming soon"
-        ><i class="dnd" aria-hidden="true"></i>
-        <div class="app-icon__tile glass" data-tint="#2f7fd6">
-          <i class="fa-solid fa-envelope"></i><span>Email</span>
-        </div></a
-      >
-      <a href="https://elanmakesgames.itch.io/" class="app-icon" target="_blank"
-        ><div class="app-icon__tile glass" data-tint="#fa5c5c">
-          <i class="fa-brands fa-itch-io"></i><span>itch.io</span>
-        </div></a
-      >
-
-      <a
-        href="https://www.etsy.com/shop/Legoco"
-        class="app-icon"
-        target="_blank"
-        ><div class="app-icon__tile glass" data-tint="#f16521">
-          <i class="fa-brands fa-etsy"></i><span>Etsy</span>
-        </div></a
-      >
-
-      <a
-        href="https://www.instagram.com/elan_rubin/"
-        class="app-icon"
-        target="_blank"
-        ><div class="app-icon__tile glass" data-tint="#c13584">
-          <i class="fa-brands fa-instagram"></i><span>Instagram</span>
-        </div></a
-      >
+    <div class="window glass">
+      <div class="window-header">
+        <span class="window-title">Slideshow</span>
+      </div>
+      <div class="window-content"><div data-slideshow></div></div>
     </div>
 
     <!-- Taskbar -->
@@ -91,6 +48,7 @@
       </script>
       Elan &nbsp;|&nbsp; All rights reserved
     </div>
+    <script src="/js/slideshow.js"></script>
     <script type="module" src="/js/scene.js"></script>
   </body>
 </html>

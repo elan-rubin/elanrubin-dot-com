@@ -3,17 +3,20 @@
 let zIndex = 1;
 
 function focusWindow(win) {
+  const previous = document.querySelector(".window[data-top]");
   win.style.zIndex = ++zIndex;
   document.querySelectorAll(".window[data-top]").forEach((other) => {
     delete other.dataset.top;
   });
   win.dataset.top = "";
+  return previous !== win;
 }
 
 function dragElement(elmnt) {
   const header = elmnt.querySelector(".window-header");
   let grabX = 0;
   let grabY = 0;
+  let moved = false;
 
   header.style.touchAction = "none";
 
@@ -25,10 +28,19 @@ function dragElement(elmnt) {
     header.setPointerCapture(e.pointerId);
     focusWindow(elmnt);
     elmnt.dataset.dragging = "";
+    moved = false;
   });
 
   const release = () => {
+    if (elmnt.dataset.dragging === undefined) return;
     delete elmnt.dataset.dragging;
+    if (moved) {
+      emit("move", {
+        name: elmnt.querySelector(".window-title").textContent.trim(),
+        x: Math.round(elmnt.offsetLeft),
+        y: Math.round(elmnt.offsetTop),
+      });
+    }
   };
   header.addEventListener("pointerup", release);
   header.addEventListener("pointercancel", release);
@@ -36,6 +48,7 @@ function dragElement(elmnt) {
 
   header.addEventListener("pointermove", (e) => {
     if (!header.hasPointerCapture(e.pointerId)) return;
+    moved = true;
     const maxX = window.innerWidth - elmnt.offsetWidth;
     const maxY = window.innerHeight - elmnt.offsetHeight;
     elmnt.style.left = Math.max(0, Math.min(e.clientX - grabX, maxX)) + "px";
@@ -84,7 +97,18 @@ document.addEventListener("DOMContentLoaded", function () {
     setupWindowControls(windows[i]);
     windows[i].style.zIndex = ++zIndex;
     const raise = windows[i];
-    raise.addEventListener("pointerdown", () => focusWindow(raise), true);
+    raise.addEventListener(
+      "pointerdown",
+      () => {
+        if (focusWindow(raise)) {
+          emit("window", {
+            name: raise.querySelector(".window-title").textContent.trim(),
+            action: "focus",
+          });
+        }
+      },
+      true,
+    );
   }
 
   const notepadContent = document.getElementById("notepadContent");
@@ -173,9 +197,12 @@ function calculate() {
   if (!display.value) return;
   try {
     const result = evaluateExpression(display.value);
+    const expr = display.value;
     display.value = String(Number(result.toPrecision(12)));
     display.dataset.state = "done";
+    emit("calc", { expr, result: display.value });
   } catch {
+    emit("calc", { expr: display.value, error: true });
     display.value = "ERR";
     display.dataset.state = "error";
   }
@@ -192,29 +219,6 @@ document.addEventListener("keydown", (event) => {
   else if (key === "Escape" || key.toLowerCase() === "c") clearDisplay();
   else return;
   event.preventDefault();
-});
-
-//app icon code
-
-document.addEventListener("DOMContentLoaded", function () {
-  const appIcons = document.querySelectorAll(".app-icon");
-  appIcons.forEach((icon) => {
-    icon.addEventListener("click", function (e) {
-      const url = this.getAttribute("href");
-      // Only handle if there's an href attribute (skip desktop icons)
-      if (url && url !== "#") {
-        e.preventDefault();
-
-        // Get the name of the link from the span text
-        const linkName = this.querySelector("span")?.textContent.toLowerCase();
-
-        window.open(url, "_blank");
-        if (linkName) {
-          addTerminalCommand(`visit ${linkName}`);
-        }
-      }
-    });
-  });
 });
 
 //update the time and volume
@@ -238,13 +242,27 @@ function updateTime() {
 
 // Store window states
 let windowStates = {
+  Slideshow: true,
   Calculator: true,
   Notepad: true,
   Playlist: true,
   Clicker: false,
 };
 
-async function toggleWindow(windowName) {
+function emit(type, detail) {
+  document.dispatchEvent(new CustomEvent(`site:${type}`, { detail }));
+}
+
+function syncLaunchers() {
+  document.querySelectorAll("[data-launch]").forEach((button) => {
+    button.classList.toggle(
+      "is-open",
+      Boolean(windowStates[button.dataset.launch]),
+    );
+  });
+}
+
+async function toggleWindow(windowName, silent = false) {
   const windowElement = findWindowByTitle(windowName);
   if (windowElement) {
     windowStates[windowName] = !windowStates[windowName];
@@ -252,15 +270,15 @@ async function toggleWindow(windowName) {
       windowElement.style.display = "block";
       windowElement.style.animation = "openWindow 0.3s";
       focusWindow(windowElement);
-      addTerminalCommand(`launch ${windowName.toLowerCase()}.exe`);
+      emit("window", { name: windowName, action: "open", silent });
     } else {
       windowElement.style.animation = "closeWindow 0.3s";
       setTimeout(() => {
         windowElement.style.display = "none";
       }, 280);
-      addTerminalCommand(`kill ${windowName.toLowerCase()}.exe`);
+      emit("window", { name: windowName, action: "close", silent });
     }
-    updateTerminalList();
+    syncLaunchers();
   }
 }
 
@@ -275,7 +293,6 @@ function findWindowByTitle(title) {
   return null;
 }
 
-// Update window controls to include visibility toggle
 function setupWindowControls(window) {
   const closeBtn = window.querySelector(".close-btn");
   const windowTitle = window.querySelector(".window-title").textContent.trim();
@@ -289,110 +306,34 @@ function setupWindowControls(window) {
   });
 }
 
-function updateTerminalList() {
-  const terminalList = document.querySelector(".terminal-list");
-  if (!terminalList) return;
-
-  terminalList.innerHTML = Object.keys(windowStates)
-    .map(
-      (name) => `
-        <li class="terminal-item">
-            <span class="status-dot ${
-              windowStates[name] ? "active" : ""
-            }"></span>
-            ${name}
-        </li>
-    `,
-    )
-    .join("");
-
-  // Reattach click handlers
-  const items = terminalList.querySelectorAll(".terminal-item");
-  items.forEach((item) => {
-    item.addEventListener("click", () => {
-      const windowName = item.textContent.trim();
-      toggleWindow(windowName);
-    });
-  });
-}
-
-// Terminal command display with typing animation
-function addTerminalCommand(command) {
-  const terminalCommands = document.getElementById("terminalCommands");
-  if (!terminalCommands) return;
-
-  // Get the current active line (the last one with just the prompt)
-  const currentLine = terminalCommands.lastChild;
-  const promptText = "C:\\Users\\Elan> ";
-
-  // Typing animation
-  let i = 0;
-  function typeChar() {
-    if (i < command.length) {
-      currentLine.textContent = promptText + command.substring(0, i + 1);
-      i++;
-      setTimeout(typeChar, 30);
-    } else {
-      // After typing is complete, add a new empty prompt line
-      const newCommandLine = document.createElement("div");
-      newCommandLine.className = "terminal-line";
-      newCommandLine.textContent = promptText;
-      terminalCommands.appendChild(newCommandLine);
-
-      // Keep only last 4 lines (3 completed + 1 empty prompt)
-      const allChildren = Array.from(terminalCommands.children);
-      if (allChildren.length > 4) {
-        terminalCommands.removeChild(allChildren[0]);
-      }
-
-      // Auto-scroll to bottom
-      terminalCommands.scrollTop = terminalCommands.scrollHeight;
+document.addEventListener("site:launch", (event) => {
+  const { name, action, silent } = event.detail;
+  const win = findWindowByTitle(name);
+  if (!win) return;
+  const open = windowStates[name];
+  if (action === "open" || action === "launch") {
+    if (!open) toggleWindow(name, silent);
+    else {
+      focusWindow(win);
+      if (!silent) emit("window", { name, action: "focus" });
     }
+  } else if (action === "close") {
+    if (open) toggleWindow(name, silent);
+  } else if (action === "focus") {
+    if (open) focusWindow(win);
+  } else if (action === "toggle") {
+    toggleWindow(name, silent);
   }
-  typeChar();
-}
+});
 
-// Initialize terminal when DOM is loaded
-// document.addEventListener('DOMContentLoaded', function() {
-//     createTerminal();
-// });
+document.addEventListener("click", (event) => {
+  const launcher = event.target.closest(".task-launch");
+  if (launcher) toggleWindow(launcher.dataset.launch);
+});
 
-// Update time every second
 setInterval(updateTime, 1000);
 
-// Initial time update
 document.addEventListener("DOMContentLoaded", function () {
   updateTime();
-  updateTerminalList();
-
-  // Initialize terminal with welcome message and first prompt
-  const terminalCommands = document.getElementById("terminalCommands");
-  if (terminalCommands) {
-    // Add welcome message
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const timeString = `${hours}:${minutes}:${now.getSeconds().toString().padStart(2, "0")}`;
-
-    const welcomeLine = document.createElement("div");
-    welcomeLine.className = "terminal-line";
-    welcomeLine.textContent = `connected at ${timeString}`;
-    terminalCommands.appendChild(welcomeLine);
-
-    // Add first empty prompt
-    const commandLine = document.createElement("div");
-    commandLine.className = "terminal-line";
-    commandLine.textContent = "C:\\Users\\Elan> ";
-    terminalCommands.appendChild(commandLine);
-  }
-
-  // Setup desktop icon click handlers
-  const desktopIcons = document.querySelectorAll(".desktop-icon");
-  desktopIcons.forEach((icon) => {
-    icon.addEventListener("click", function () {
-      const windowName = this.getAttribute("data-window");
-      toggleWindow(windowName);
-    });
-  });
+  syncLaunchers();
 });
-//sometiemes this doesnt work

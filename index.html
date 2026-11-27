@@ -25,6 +25,7 @@
 
     <link rel="stylesheet" href="/css/tokens.css" />
     <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/slideshow.css" />
     <link rel="stylesheet" href="/css/desktop.css" />
 
     <script>
@@ -43,75 +44,16 @@
 
   <body>
     <section id="desktopSection" class="stage" data-scene>
-      <div class="desktop-app-icons">
-        <div class="app-icon desktop-icon" data-window="Calculator">
-          <div class="app-icon__tile glass" data-tint="#8e8e93">
-            <i class="fa-solid fa-calculator"></i><span>Calculator</span>
+      <div class="window glass" style="top: 2rem; left: 2rem; width: 31rem">
+        <div class="window-header">
+          <div class="window-title">Slideshow</div>
+          <div class="window-controls">
+            <button class="window-button close-btn">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
           </div>
         </div>
-        <div class="app-icon desktop-icon" data-window="Notepad">
-          <div class="app-icon__tile glass" data-tint="#f5c542">
-            <i class="fa-solid fa-note-sticky"></i><span>Notepad</span>
-          </div>
-        </div>
-        <div class="app-icon desktop-icon" data-window="Playlist">
-          <div class="app-icon__tile glass" data-tint="#6c7ae0">
-            <i class="fa-solid fa-music"></i><span>Playlist</span>
-          </div>
-        </div>
-        <div class="app-icon desktop-icon" data-window="Clicker">
-          <div class="app-icon__tile glass" data-tint="#d2783c">
-            <i class="fa-solid fa-cookie-bite"></i><span>Clicker</span>
-          </div>
-        </div>
-      </div>
-      <div class="app-icons">
-        <a
-          href="https://www.linkedin.com/in/elan-rubin/"
-          class="app-icon"
-          target="_blank"
-          ><div class="app-icon__tile glass" data-tint="#0a66c2">
-            <i class="fa-brands fa-linkedin"></i><span>LinkedIn</span>
-          </div></a
-        >
-        <a href="https://github.com/Elan-Rubin" class="app-icon" target="_blank"
-          ><div class="app-icon__tile glass" data-tint="#1e1e1e">
-            <i class="fa-brands fa-github"></i><span>GitHub</span>
-          </div></a
-        >
-        <a
-          class="app-icon app-icon--disabled"
-          aria-disabled="true"
-          title="coming soon"
-          ><i class="dnd" aria-hidden="true"></i>
-          <div class="app-icon__tile glass" data-tint="#2f7fd6">
-            <i class="fa-solid fa-envelope"></i><span>Email</span>
-          </div></a
-        >
-        <a
-          href="https://elanmakesgames.itch.io/"
-          class="app-icon"
-          target="_blank"
-          ><div class="app-icon__tile glass" data-tint="#fa5c5c">
-            <i class="fa-brands fa-itch-io"></i><span>itch.io</span>
-          </div></a
-        >
-        <a
-          href="https://www.etsy.com/shop/Legoco"
-          class="app-icon"
-          target="_blank"
-          ><div class="app-icon__tile glass" data-tint="#f16521">
-            <i class="fa-brands fa-etsy"></i><span>Etsy</span>
-          </div></a
-        >
-        <a
-          href="https://www.instagram.com/elan_rubin/"
-          class="app-icon"
-          target="_blank"
-          ><div class="app-icon__tile glass" data-tint="#c13584">
-            <i class="fa-brands fa-instagram"></i><span>Instagram</span>
-          </div></a
-        >
+        <div class="window-content"><div data-slideshow></div></div>
       </div>
       <div
         class="window glass terminal"
@@ -220,7 +162,7 @@
 
       <div
         class="window glass notepad"
-        style="top: calc(1rem + 1.5rem); left: 22rem"
+        style="top: calc(1rem + 1.5rem); left: 36rem"
       >
         <div class="window-header">
           <div class="window-title">Notepad</div>
@@ -362,6 +304,13 @@
         </div>
         <div id="timeDisplay"></div>
       </div>
+      <div id="taskBarLaunch">
+        <button class="task-launch" data-launch="Slideshow">slideshow</button>
+        <button class="task-launch" data-launch="Calculator">calculator</button>
+        <button class="task-launch" data-launch="Notepad">notepad</button>
+        <button class="task-launch" data-launch="Playlist">playlist</button>
+        <button class="task-launch" data-launch="Clicker">clicker</button>
+      </div>
       <div id="taskBarItemsRight">
         <div>
           <script>
@@ -375,6 +324,8 @@
         <div style="background-color: red; padding: 2rem;">asd;ljkfjas;dlf</div>
     </section> -->
     <script src="/js/components.js"></script>
+    <script src="/js/slideshow.js"></script>
+    <script src="/js/terminal.js"></script>
     <script type="module" src="/js/scene.js"></script>
   </body>
 </html>

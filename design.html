@@ -13,6 +13,7 @@
     />
     <link rel="stylesheet" href="/css/tokens.css" />
     <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/slideshow.css" />
   </head>
   <body>
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
@@ -464,6 +465,11 @@
         <pre class="code"><b>const</b> signal = <b>"green"</b>;
 console.log(signal);</pre>
 
+        <div class="stack">
+          <h3 class="label">Capsule slideshow</h3>
+          <div style="max-width: 30rem"><div data-slideshow></div></div>
+        </div>
+
         <div class="gallery">
           <div class="frame" data-label="frame 01"></div>
           <div class="frame" data-label="frame 02"></div>
@@ -604,5 +610,6 @@ console.log(signal);</pre>
 
     <div class="toasts"></div>
     <script src="/js/components.js"></script>
+    <script src="/js/slideshow.js"></script>
   </body>
 </html>
